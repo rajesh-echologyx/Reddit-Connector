@@ -1,0 +1,22 @@
+# Optional production overrides (Phase 6 hardens further).
+services:
+  web:
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3
+    environment:
+      DJANGO_ENV: production
+      DJANGO_DEBUG: "false"
+      ALLOW_BOOTSTRAP: "false"
+    restart: unless-stopped
+
+  worker:
+    environment:
+      DJANGO_ENV: production
+    restart: unless-stopped
+
+  beat:
+    environment:
+      DJANGO_ENV: production
+    restart: unless-stopped
+
+  frontend:
+    profiles: ["dev-frontend"]
