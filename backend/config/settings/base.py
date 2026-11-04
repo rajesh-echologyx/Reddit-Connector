@@ -157,10 +157,22 @@ CSRF_COOKIE_HTTPONLY = False  # SPA must read CSRF cookie
 CSRF_COOKIE_SAMESITE = "Lax"
 
 # ---------------------------------------------------------------------------
-# Celery
+# Cache (OAuth state); prefer Redis when available
 # ---------------------------------------------------------------------------
 
 REDIS_URL = env("REDIS_URL", "redis://localhost:6379/0") or "redis://localhost:6379/0"
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "raddit-default",
+    }
+}
+
+# ---------------------------------------------------------------------------
+# Celery
+# ---------------------------------------------------------------------------
+
 CELERY_BROKER_URL = REDIS_URL
 CELERY_RESULT_BACKEND = REDIS_URL
 CELERY_ACCEPT_CONTENT = ["json"]

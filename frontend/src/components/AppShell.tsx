@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from "react-router-dom";
 
+import { DevModeBanner } from "@/components/DevModeBanner";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
@@ -19,6 +20,7 @@ export function AppShell() {
 
   return (
     <div className="min-h-screen">
+      <DevModeBanner />
       <header className="border-b border-[var(--color-line)] bg-white/55 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
           <div className="flex items-baseline gap-3">

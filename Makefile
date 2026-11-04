@@ -1,4 +1,4 @@
-.PHONY: up down migrate test lint frontend-install backend-install bootstrap-hint
+.PHONY: up down migrate test lint frontend-install backend-install bootstrap-hint seed-reddit
 
 up:
 	docker compose up --build
@@ -22,6 +22,9 @@ frontend-install:
 
 backend-install:
 	cd backend && pip install -r requirements-dev.txt
+
+seed-reddit:
+	cd backend && DJANGO_ENV=local REDDIT_MODE=fixture python manage.py seed_dev_reddit --poll
 
 bootstrap-hint:
 	@echo "With ALLOW_BOOTSTRAP=true and zero users:"

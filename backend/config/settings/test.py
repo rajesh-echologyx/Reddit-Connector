@@ -2,17 +2,28 @@
 
 from __future__ import annotations
 
+from cryptography.fernet import Fernet
+
 from .base import *  # noqa: F401,F403
 
 DEBUG = False
 SECRET_KEY = "test-secret-key-not-for-production"
 ALLOW_BOOTSTRAP = True  # noqa: F811
 REDDIT_MODE = "fixture"  # noqa: F811
+# Stable Fernet key for deterministic encrypt/decrypt tests
+TOKEN_ENCRYPTION_KEY = Fernet.generate_key().decode()  # noqa: F811
 
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": ":memory:",
+    }
+}
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "raddit-test",
     }
 }
 
