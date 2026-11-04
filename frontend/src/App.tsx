@@ -5,14 +5,14 @@ import { AppShell } from "@/components/AppShell";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { LoginPage } from "@/pages/LoginPage";
+import { MonitorsPage } from "@/pages/MonitorsPage";
+import { PostsPage } from "@/pages/PostsPage";
 import {
   AnalyticsPage,
-  MonitorsPage,
-  PostsPage,
   ProfilePage,
   ReviewPage,
-  SettingsPage,
 } from "@/pages/Placeholders";
+import { SettingsPage } from "@/pages/SettingsPage";
 import type { ReactNode } from "react";
 
 const queryClient = new QueryClient();

@@ -1,0 +1,356 @@
+{
+  "posts": [
+    {
+      "data": {
+        "id": "abc001",
+        "name": "t3_abc001",
+        "subreddit": "python",
+        "title": "How do you structure a Django + Celery monorepo for personal tools?",
+        "selftext": "Looking for layout advice: backend/, frontend/, docker-compose, and how you keep secrets out of git. Bonus if you use Redis for rate limits.",
+        "author": "dev_curious",
+        "url": "https://www.reddit.com/r/python/comments/abc001/django_celery/",
+        "permalink": "/r/python/comments/abc001/django_celery/",
+        "score": 42,
+        "num_comments": 18,
+        "created_utc": 1730400000,
+        "over_18": false
+      }
+    },
+    {
+      "data": {
+        "id": "abc002",
+        "name": "t3_abc002",
+        "subreddit": "python",
+        "title": "Best practices for encrypting OAuth tokens at rest in Django",
+        "selftext": "Is Fernet good enough for a personal app storing Reddit refresh tokens? Key rotation stories welcome.",
+        "author": "secure_enough",
+        "url": "https://www.reddit.com/r/python/comments/abc002/fernet/",
+        "permalink": "/r/python/comments/abc002/fernet/",
+        "score": 67,
+        "num_comments": 24,
+        "created_utc": 1730403600,
+        "over_18": false
+      }
+    },
+    {
+      "data": {
+        "id": "abc003",
+        "name": "t3_abc003",
+        "subreddit": "python",
+        "title": "pytest + DRF session auth: CSRF tips?",
+        "selftext": "Our SPA uses session cookies. Tests with enforce_csrf_checks=True keep biting us. Patterns that scale?",
+        "author": "test_pilot",
+        "url": "https://www.reddit.com/r/python/comments/abc003/csrf/",
+        "permalink": "/r/python/comments/abc003/csrf/",
+        "score": 21,
+        "num_comments": 9,
+        "created_utc": 1730407200,
+        "over_18": false
+      }
+    },
+    {
+      "data": {
+        "id": "abc004",
+        "name": "t3_abc004",
+        "subreddit": "python",
+        "title": "Anyone monitoring Reddit keywords via official API for research?",
+        "selftext": "I want a personal research assistant that searches Reddit for niche keywords and never auto-posts replies.",
+        "author": "research_bot_no",
+        "url": "https://www.reddit.com/r/python/comments/abc004/monitor/",
+        "permalink": "/r/python/comments/abc004/monitor/",
+        "score": 55,
+        "num_comments": 31,
+        "created_utc": 1730410800,
+        "over_18": false
+      }
+    },
+    {
+      "data": {
+        "id": "abc005",
+        "name": "t3_abc005",
+        "subreddit": "learnprogramming",
+        "title": "How to design a human-in-the-loop AI reply queue",
+        "selftext": "Drafts from GPT land in a review UI. Approve should never publish automatically. Architecture ideas?",
+        "author": "loop_human",
+        "url": "https://www.reddit.com/r/learnprogramming/comments/abc005/hil/",
+        "permalink": "/r/learnprogramming/comments/abc005/hil/",
+        "score": 88,
+        "num_comments": 40,
+        "created_utc": 1730414400,
+        "over_18": false
+      }
+    },
+    {
+      "data": {
+        "id": "abc006",
+        "name": "t3_abc006",
+        "subreddit": "learnprogramming",
+        "title": "Vite + React + Django session auth CORS headache",
+        "selftext": "Credentials include, CSRF cookie, SameSite=Lax. What am I missing on localhost:5173?",
+        "author": "cors_cries",
+        "url": "https://www.reddit.com/r/learnprogramming/comments/abc006/cors/",
+        "permalink": "/r/learnprogramming/comments/abc006/cors/",
+        "score": 33,
+        "num_comments": 15,
+        "created_utc": 1730418000,
+        "over_18": false
+      }
+    },
+    {
+      "data": {
+        "id": "abc007",
+        "name": "t3_abc007",
+        "subreddit": "learnprogramming",
+        "title": "Should beginners scrape Reddit or use the official OAuth API?",
+        "selftext": "Tutorials keep showing scraping. I'd rather stay compliant with OAuth identity+read scopes.",
+        "author": "new_dev_99",
+        "url": "https://www.reddit.com/r/learnprogramming/comments/abc007/oauth/",
+        "permalink": "/r/learnprogramming/comments/abc007/oauth/",
+        "score": 120,
+        "num_comments": 52,
+        "created_utc": 1730421600,
+        "over_18": false
+      }
+    },
+    {
+      "data": {
+        "id": "abc008",
+        "name": "t3_abc008",
+        "subreddit": "webdev",
+        "title": "Building a personal dashboard for Reddit research — UI tips",
+        "selftext": "Need pages for Settings (connect Reddit), Monitors (keywords), and Posts list. Keep it calm, not card soup.",
+        "author": "ui_gardener",
+        "url": "https://www.reddit.com/r/webdev/comments/abc008/dashboard/",
+        "permalink": "/r/webdev/comments/abc008/dashboard/",
+        "score": 44,
+        "num_comments": 12,
+        "created_utc": 1730425200,
+        "over_18": false
+      }
+    },
+    {
+      "data": {
+        "id": "abc009",
+        "name": "t3_abc009",
+        "subreddit": "webdev",
+        "title": "TanStack Query patterns for DRF pagination",
+        "selftext": "PageNumberPagination page_size=25. How do you wire filters for status and subreddit?",
+        "author": "query_fan",
+        "url": "https://www.reddit.com/r/webdev/comments/abc009/tanstack/",
+        "permalink": "/r/webdev/comments/abc009/tanstack/",
+        "score": 29,
+        "num_comments": 8,
+        "created_utc": 1730428800,
+        "over_18": false
+      }
+    },
+    {
+      "data": {
+        "id": "abc010",
+        "name": "t3_abc010",
+        "subreddit": "webdev",
+        "title": "Feature flag for Reddit comment submit — default off?",
+        "selftext": "We want approve to mean local approval only. Authenticated submit would be a later opt-in.",
+        "author": "flag_ship",
+        "url": "https://www.reddit.com/r/webdev/comments/abc010/flag/",
+        "permalink": "/r/webdev/comments/abc010/flag/",
+        "score": 61,
+        "num_comments": 19,
+        "created_utc": 1730432400,
+        "over_18": false
+      }
+    },
+    {
+      "data": {
+        "id": "abc011",
+        "name": "t3_abc011",
+        "subreddit": "datascience",
+        "title": "Relevance scoring posts with gpt-4o-mini — cheap filter tips",
+        "selftext": "Structured JSON relevance first, drafts only for high scores. Anyone split the pipeline this way?",
+        "author": "scorekeeper",
+        "url": "https://www.reddit.com/r/datascience/comments/abc011/relevance/",
+        "permalink": "/r/datascience/comments/abc011/relevance/",
+        "score": 73,
+        "num_comments": 27,
+        "created_utc": 1730436000,
+        "over_18": false
+      }
+    },
+    {
+      "data": {
+        "id": "abc012",
+        "name": "t3_abc012",
+        "subreddit": "datascience",
+        "title": "Deduplicating social posts by platform fullname",
+        "selftext": "Using unique reddit_fullname (t3_xxx) as the idempotency key. Alternatives you've liked?",
+        "author": "dedupe_dave",
+        "url": "https://www.reddit.com/r/datascience/comments/abc012/dedupe/",
+        "permalink": "/r/datascience/comments/abc012/dedupe/",
+        "score": 38,
+        "num_comments": 11,
+        "created_utc": 1730439600,
+        "over_18": false
+      }
+    },
+    {
+      "data": {
+        "id": "abc013",
+        "name": "t3_abc013",
+        "subreddit": "datascience",
+        "title": "Fixture modes for API-dependent pipelines",
+        "selftext": "When Reddit API approval lags, we swap a FixtureRedditClient that reads JSON samples. Good idea?",
+        "author": "fixture_fan",
+        "url": "https://www.reddit.com/r/datascience/comments/abc013/fixtures/",
+        "permalink": "/r/datascience/comments/abc013/fixtures/",
+        "score": 26,
+        "num_comments": 6,
+        "created_utc": 1730443200,
+        "over_18": false
+      }
+    },
+    {
+      "data": {
+        "id": "abc014",
+        "name": "t3_abc014",
+        "subreddit": "devops",
+        "title": "Docker Compose for Django web + Celery worker + beat + Redis + Postgres",
+        "selftext": "Sharing a minimal compose that mirrors prod topology for a personal Reddit research tool.",
+        "author": "compose_keeper",
+        "url": "https://www.reddit.com/r/devops/comments/abc014/compose/",
+        "permalink": "/r/devops/comments/abc014/compose/",
+        "score": 95,
+        "num_comments": 34,
+        "created_utc": 1730446800,
+        "over_18": false
+      }
+    },
+    {
+      "data": {
+        "id": "abc015",
+        "name": "t3_abc015",
+        "subreddit": "devops",
+        "title": "Redis locks to prevent Celery Beat stampede on external APIs",
+        "selftext": "Per-account redis lock + token bucket at 30 rpm. Too conservative for Reddit search?",
+        "author": "locksmith_ops",
+        "url": "https://www.reddit.com/r/devops/comments/abc015/locks/",
+        "permalink": "/r/devops/comments/abc015/locks/",
+        "score": 48,
+        "num_comments": 14,
+        "created_utc": 1730450400,
+        "over_18": false
+      }
+    },
+    {
+      "data": {
+        "id": "abc016",
+        "name": "t3_abc016",
+        "subreddit": "devops",
+        "title": "Fail-fast if REDDIT_MODE=fixture in production",
+        "selftext": "We raise ImproperlyConfigured on boot. Any better patterns for mode guards?",
+        "author": "prod_guard",
+        "url": "https://www.reddit.com/r/devops/comments/abc016/fixture_guard/",
+        "permalink": "/r/devops/comments/abc016/fixture_guard/",
+        "score": 57,
+        "num_comments": 10,
+        "created_utc": 1730454000,
+        "over_18": false
+      }
+    },
+    {
+      "data": {
+        "id": "abc017",
+        "name": "t3_abc017",
+        "subreddit": "python",
+        "title": "httpx vs requests for Reddit OAuth client in 2025",
+        "selftext": "Building a thin LiveRedditClient with search + identity. Prefer httpx Client context managers?",
+        "author": "http_wonder",
+        "url": "https://www.reddit.com/r/python/comments/abc017/httpx/",
+        "permalink": "/r/python/comments/abc017/httpx/",
+        "score": 19,
+        "num_comments": 7,
+        "created_utc": 1730457600,
+        "over_18": false
+      }
+    },
+    {
+      "data": {
+        "id": "abc018",
+        "name": "t3_abc018",
+        "subreddit": "learnprogramming",
+        "title": "What does identity,read Reddit OAuth scope cover?",
+        "selftext": "Need search and identity only. Submit later behind a feature flag. Confirming least privilege.",
+        "author": "scope_creep_no",
+        "url": "https://www.reddit.com/r/learnprogramming/comments/abc018/scopes/",
+        "permalink": "/r/learnprogramming/comments/abc018/scopes/",
+        "score": 14,
+        "num_comments": 5,
+        "created_utc": 1730461200,
+        "over_18": false
+      }
+    },
+    {
+      "data": {
+        "id": "abc019",
+        "name": "t3_abc019",
+        "subreddit": "webdev",
+        "title": "Amber banner when Reddit is in development fixture mode",
+        "selftext": "UX pattern: persistent banner so operators never confuse fixtures with live data.",
+        "author": "banner_time",
+        "url": "https://www.reddit.com/r/webdev/comments/abc019/banner/",
+        "permalink": "/r/webdev/comments/abc019/banner/",
+        "score": 22,
+        "num_comments": 4,
+        "created_utc": 1730464800,
+        "over_18": false
+      }
+    },
+    {
+      "data": {
+        "id": "abc020",
+        "name": "t3_abc020",
+        "subreddit": "datascience",
+        "title": "Keyword match modes: any vs all_words vs exact_phrase",
+        "selftext": "Mapping these to Reddit search query syntax for a monitor system. Looking for gotchas.",
+        "author": "keyword_kat",
+        "url": "https://www.reddit.com/r/datascience/comments/abc020/keywords/",
+        "permalink": "/r/datascience/comments/abc020/keywords/",
+        "score": 31,
+        "num_comments": 9,
+        "created_utc": 1730468400,
+        "over_18": false
+      }
+    },
+    {
+      "data": {
+        "id": "abc021",
+        "name": "t3_abc021",
+        "subreddit": "python",
+        "title": "Off-topic: favorite mechanical keyboard for coding marathons",
+        "selftext": "Totally unrelated to Reddit APIs. Just vibes and switches.",
+        "author": "clicky",
+        "url": "https://www.reddit.com/r/python/comments/abc021/keyboards/",
+        "permalink": "/r/python/comments/abc021/keyboards/",
+        "score": 210,
+        "num_comments": 90,
+        "created_utc": 1730472000,
+        "over_18": false
+      }
+    },
+    {
+      "data": {
+        "id": "abc022",
+        "name": "t3_abc022",
+        "subreddit": "devops",
+        "title": "Backoff strategies when X-Ratelimit-Remaining hits zero",
+        "selftext": "Celery retry with countdown from Retry-After vs exponential. What worked for you?",
+        "author": "retry_rory",
+        "url": "https://www.reddit.com/r/devops/comments/abc022/backoff/",
+        "permalink": "/r/devops/comments/abc022/backoff/",
+        "score": 40,
+        "num_comments": 13,
+        "created_utc": 1730475600,
+        "over_18": false
+      }
+    }
+  ]
+}

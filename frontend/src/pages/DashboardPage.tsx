@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
+import type { ReactNode } from "react";
+import { Link } from "react-router-dom";
 
-import { opsApi } from "@/api/client";
+import { monitorsApi, opsApi, redditApi } from "@/api/client";
 import { useAuth } from "@/hooks/useAuth";
 
 export function DashboardPage() {
@@ -9,6 +11,24 @@ export function DashboardPage() {
     queryKey: ["health"],
     queryFn: () => opsApi.health(),
   });
+  const reddit = useQuery({
+    queryKey: ["reddit-status"],
+    queryFn: () => redditApi.status(),
+  });
+  const posts = useQuery({
+    queryKey: ["posts", {}],
+    queryFn: () => redditApi.posts(),
+  });
+  const monitors = useQuery({
+    queryKey: ["monitors"],
+    queryFn: () => monitorsApi.list(),
+  });
+
+  const connectionLabel =
+    reddit.data?.reddit_username ||
+    reddit.data?.status ||
+    health.data?.reddit_mode ||
+    "…";
 
   return (
     <section className="space-y-6">
@@ -20,18 +40,30 @@ export function DashboardPage() {
           Dashboard
         </h1>
         <p className="max-w-2xl text-black/70">
-          Welcome{user ? `, ${user.username}` : ""}. Phase 1 foundation is live —
-          monitors, analysis, and review land in later phases.
+          Welcome{user ? `, ${user.username}` : ""}. Phase 2 Reddit integration is
+          live — configure monitors, discover posts, connect OAuth when ready.
         </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Stat label="Due reviews" value="—" hint="Phase 4" />
-        <Stat label="New relevant posts" value="—" hint="Phase 3" />
+        <Stat
+          label="Monitors"
+          value={String(monitors.data?.count ?? "…")}
+          hint={<Link to="/monitors">Manage keywords</Link>}
+        />
+        <Stat
+          label="Discovered posts"
+          value={String(posts.data?.count ?? "…")}
+          hint={<Link to="/posts">Browse posts</Link>}
+        />
         <Stat
           label="Reddit connection"
-          value={health.data?.reddit_mode ?? "…"}
-          hint={health.data?.db ? "API healthy" : "Checking…"}
+          value={connectionLabel}
+          hint={
+            <Link to="/settings">
+              {reddit.data?.mode === "fixture" ? "Fixture mode" : "Settings"}
+            </Link>
+          }
         />
       </div>
 
@@ -50,10 +82,10 @@ function Stat({
 }: {
   label: string;
   value: string;
-  hint: string;
+  hint: ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-[var(--color-line)] bg-white/65 px-4 py-5">
+    <div className="border-t border-[var(--color-line)] pt-4">
       <p className="text-xs uppercase tracking-wide text-black/45">{label}</p>
       <p
         className="mt-2 text-2xl text-[var(--color-moss-deep)]"

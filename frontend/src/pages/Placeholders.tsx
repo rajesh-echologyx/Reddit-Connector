@@ -9,38 +9,11 @@ export function ReviewPage() {
   );
 }
 
-export function PostsPage() {
-  return (
-    <PlaceholderPage
-      title="Posts"
-      description="Discovered Reddit posts and relevance scores."
-    />
-  );
-}
-
-export function MonitorsPage() {
-  return (
-    <PlaceholderPage
-      title="Monitors"
-      description="Keyword and subreddit monitors that poll via the official Reddit API."
-    />
-  );
-}
-
 export function ProfilePage() {
   return (
     <PlaceholderPage
       title="Profile"
       description="Expertise, tone, constraints, and writing samples for AI drafting."
-    />
-  );
-}
-
-export function SettingsPage() {
-  return (
-    <PlaceholderPage
-      title="Settings"
-      description="Reddit OAuth connection, feature flags, and operator preferences."
     />
   );
 }

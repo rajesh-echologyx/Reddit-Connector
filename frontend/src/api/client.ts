@@ -111,3 +111,122 @@ export const authApi = {
 export const opsApi = {
   health: () => api<Health>("/health/"),
 };
+
+export type RedditStatus = {
+  connected: boolean;
+  status: string | null;
+  reddit_username: string | null;
+  scopes: string | null;
+  mode: string;
+  token_expires_at: string | null;
+  never_auto_publish: boolean;
+};
+
+export type RedditPost = {
+  id: string;
+  reddit_fullname: string;
+  reddit_id: string;
+  subreddit: string;
+  title: string;
+  selftext: string;
+  author: string;
+  url: string;
+  permalink: string;
+  reddit_url: string;
+  score: number;
+  num_comments: number;
+  created_utc: string | null;
+  status: string;
+  monitor_id: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Keyword = {
+  id: string;
+  phrase: string;
+  match_mode: "any" | "all_words" | "exact_phrase";
+  created_at: string;
+  updated_at: string;
+};
+
+export type Subreddit = {
+  id: string;
+  name: string;
+  reddit_id: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Monitor = {
+  id: string;
+  name: string;
+  is_active: boolean;
+  poll_interval_minutes: number;
+  min_score: number | null;
+  min_comments: number | null;
+  include_nsfw: boolean;
+  keywords: Keyword[];
+  subreddits: Subreddit[];
+  last_polled_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Paginated<T> = {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+};
+
+export const redditApi = {
+  status: () => api<RedditStatus>("/reddit/status/"),
+  oauthStart: () =>
+    api<{ authorize_url: string | null; mode: string; detail?: string; state?: string }>(
+      "/reddit/oauth/start/",
+    ),
+  disconnect: () =>
+    api<{ detail: string; status: string }>("/reddit/disconnect/", {
+      method: "POST",
+      json: {},
+    }),
+  posts: (params?: Record<string, string>) => {
+    const qs = params ? `?${new URLSearchParams(params)}` : "";
+    return api<Paginated<RedditPost>>(`/posts/${qs}`);
+  },
+  post: (id: string) => api<RedditPost>(`/posts/${id}/`),
+};
+
+export const monitorsApi = {
+  list: () => api<Paginated<Monitor>>("/monitors/"),
+  create: (body: {
+    name: string;
+    poll_interval_minutes?: number;
+    is_active?: boolean;
+    include_nsfw?: boolean;
+    min_score?: number | null;
+    min_comments?: number | null;
+    subreddit_names?: string[];
+  }) => api<Monitor>("/monitors/", { method: "POST", json: body }),
+  update: (id: string, body: Record<string, unknown>) =>
+    api<Monitor>(`/monitors/${id}/`, { method: "PATCH", json: body }),
+  remove: (id: string) => api<void>(`/monitors/${id}/`, { method: "DELETE" }),
+  addKeyword: (id: string, phrase: string, match_mode: Keyword["match_mode"] = "any") =>
+    api<Keyword>(`/monitors/${id}/keywords/`, {
+      method: "POST",
+      json: { phrase, match_mode },
+    }),
+  deleteKeyword: (monitorId: string, keywordId: string) =>
+    api<void>(`/monitors/${monitorId}/keywords/${keywordId}/`, { method: "DELETE" }),
+  setSubreddits: (id: string, subreddits: string[]) =>
+    api<Monitor>(`/monitors/${id}/subreddits/`, {
+      method: "PUT",
+      json: { subreddits },
+    }),
+  run: (id: string) =>
+    api<{ detail: string; task_id: string; result?: unknown }>(`/monitors/${id}/run/`, {
+      method: "POST",
+      json: {},
+    }),
+};

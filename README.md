@@ -9,15 +9,19 @@ Personal Reddit research & AI reply assistant.
 
 This repository is a monorepo (`backend/` Django/DRF + `frontend/` Vite/React).
 
-## Phase 1 status
+## Phase status
 
-Foundation scaffold: Docker Compose services, custom User + session/CSRF auth, health endpoints, dashboard shell with login and empty nav. Domain features (Reddit OAuth, monitors, AI, review) land in later phases.
+| Phase | Status |
+|-------|--------|
+| 1 Foundation | Merged |
+| 2 Reddit integration | This branch — OAuth, monitors, fixture mode, posts |
+| 3+ AI / review / automation | Not started |
 
 ## Quick start (Docker)
 
 ```bash
 cp .env.example .env
-# set DJANGO_SECRET_KEY at minimum
+# set DJANGO_SECRET_KEY and TOKEN_ENCRYPTION_KEY at minimum
 docker compose up --build
 ```
 
@@ -27,18 +31,52 @@ docker compose up --build
 | Frontend | http://localhost:5173 |
 | Health   | http://localhost:8000/api/v1/health/ |
 
-First run: open the frontend login page and use **First-run bootstrap** (requires `ALLOW_BOOTSTRAP=true` and zero users), or:
+First run: open the frontend login page and use **First-run bootstrap** (requires `ALLOW_BOOTSTRAP=true` and zero users).
+
+Then seed fixture posts (optional, `REDDIT_MODE=fixture`):
 
 ```bash
-# 1) obtain CSRF cookie
-curl -c cookies.txt http://localhost:8000/api/v1/auth/csrf/
-# 2) bootstrap owner (replace CSRF token from cookie / response)
-curl -b cookies.txt -c cookies.txt \
-  -H "Content-Type: application/json" \
-  -H "X-CSRFToken: <csrftoken>" \
-  -d '{"username":"owner","password":"choose-a-strong-password"}' \
-  http://localhost:8000/api/v1/auth/bootstrap/
+docker compose exec web python manage.py seed_dev_reddit --poll
+# or locally: make seed-reddit
 ```
+
+## Reddit modes
+
+### Fixture mode (default for local / CI)
+
+```bash
+REDDIT_MODE=fixture
+```
+
+- Uses `FixtureRedditClient` + JSON under `backend/fixtures/reddit/`.
+- Auto-creates a `RedditAccount` with `status=dev_fixture`.
+- Amber banner in the UI: “Development mode — Reddit API not connected”.
+- **Refused** when `DJANGO_ENV=production`.
+
+### Live OAuth mode
+
+1. Create a Reddit “web app” at https://www.reddit.com/prefs/apps  
+2. Redirect URI must match `REDDIT_REDIRECT_URI` (default `http://localhost:8000/api/v1/reddit/oauth/callback/`).  
+3. Set env:
+
+```bash
+REDDIT_MODE=live
+REDDIT_CLIENT_ID=...
+REDDIT_CLIENT_SECRET=...
+REDDIT_REDIRECT_URI=http://localhost:8000/api/v1/reddit/oauth/callback/
+REDDIT_USER_AGENT=web:raddit-connector:v0.1.0 (by /u/YOUR_USER)
+TOKEN_ENCRYPTION_KEY=<fernet-key>
+```
+
+4. Generate encryption key:
+
+```bash
+python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+```
+
+5. Open **Settings** → Connect Reddit. Scopes requested: `identity`, `read` only (no submit).
+
+Disconnect clears local tokens and best-effort revokes the refresh token. **Approve ≠ publish** — there is no Reddit write path in Phase 2.
 
 ## Local development (without Docker)
 
@@ -49,11 +87,10 @@ cd backend
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements-dev.txt
 export DJANGO_ENV=local DJANGO_SECRET_KEY=dev ALLOW_BOOTSTRAP=true REDDIT_MODE=fixture
+export TOKEN_ENCRYPTION_KEY=$(python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
 python manage.py migrate
 python manage.py runserver
 ```
-
-SQLite is used when `DATABASE_URL` is unset. For Postgres/Redis, point `DATABASE_URL` / `REDIS_URL` at running services (or use Compose for just `db` + `redis`).
 
 ### Frontend
 
@@ -69,38 +106,39 @@ Vite proxies `/api` to `http://localhost:8000`.
 
 ```bash
 make test
-# or
-cd backend && DJANGO_ENV=test python -m pytest tests/
-cd frontend && npm run build
 ```
 
-## Auth API (Phase 1)
+## Phase 2 API
 
-| Method | Path | Auth |
-|--------|------|------|
-| GET | `/api/v1/auth/csrf/` | public |
-| POST | `/api/v1/auth/login/` | public |
-| POST | `/api/v1/auth/logout/` | session |
-| GET | `/api/v1/auth/me/` | session |
-| POST | `/api/v1/auth/bootstrap/` | public, gated by `ALLOW_BOOTSTRAP` |
-| GET | `/api/v1/health/` | public |
-| GET | `/api/v1/health/ready/` | public |
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/api/v1/reddit/oauth/start/` | Authorize URL (or fixture notice) |
+| GET | `/api/v1/reddit/oauth/callback/` | Code exchange → encrypted tokens |
+| GET | `/api/v1/reddit/status/` | Connection status / username / mode |
+| POST | `/api/v1/reddit/disconnect/` | Local revoke (+ best-effort Reddit revoke) |
+| GET/POST | `/api/v1/monitors/` | List/create monitors |
+| GET/PATCH/DELETE | `/api/v1/monitors/{id}/` | Detail/update/delete |
+| POST | `/api/v1/monitors/{id}/run/` | Manual poll (enqueue `poll_monitor`) |
+| GET/POST | `/api/v1/monitors/{id}/keywords/` | Keywords CRUD |
+| PUT | `/api/v1/monitors/{id}/subreddits/` | Replace subreddit set |
+| GET | `/api/v1/posts/` | Discovered posts (`status`, `subreddit`, `q`, `min_score`) |
+| GET | `/api/v1/posts/{id}/` | Post detail |
 
-Session cookie + CSRF header (`X-CSRFToken`) for mutating verbs.
+Auth endpoints from Phase 1 remain under `/api/v1/auth/` and `/api/v1/health/`.
 
 ## Layout
 
-See the technical plan for the full monorepo map. Top-level:
-
 ```
-backend/     Django 5 + DRF + Celery
-frontend/    Vite + React + TS + Tailwind (+ shadcn-ready)
-scripts/     wait-for-db, seed stubs
+backend/     Django 5 + DRF + Celery (reddit + monitors apps)
+frontend/    Vite + React + TS + Tailwind
+backend/fixtures/reddit/   Development sample posts
+scripts/     wait-for-db, seed-dev
 docker-compose.yml
 ```
 
 ## Security notes
 
 - Keep secrets in `.env` (gitignored). `.env.example` has placeholders only.
+- Reddit tokens encrypted at rest with Fernet (`TOKEN_ENCRYPTION_KEY`).
 - `REDDIT_MODE=fixture` is refused when `DJANGO_ENV=production`.
-- Approve ≠ publish. No Reddit write path in Phase 1.
+- Approve ≠ publish. No Reddit comment write path in Phase 2.
