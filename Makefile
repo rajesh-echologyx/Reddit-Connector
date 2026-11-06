@@ -1,7 +1,10 @@
-.PHONY: up down migrate test lint frontend-install backend-install bootstrap-hint seed-reddit
+.PHONY: up down up-prod migrate test lint frontend-install backend-install bootstrap-hint seed-reddit rollup-analytics
 
 up:
 	docker compose up --build
+
+up-prod:
+	docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
 
 down:
 	docker compose down
@@ -25,6 +28,9 @@ backend-install:
 
 seed-reddit:
 	cd backend && DJANGO_ENV=local REDDIT_MODE=fixture python manage.py seed_dev_reddit --poll
+
+rollup-analytics:
+	cd backend && DJANGO_ENV=local python manage.py rollup_analytics --days 30
 
 bootstrap-hint:
 	@echo "With ALLOW_BOOTSTRAP=true and zero users:"

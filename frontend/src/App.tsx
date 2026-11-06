@@ -7,7 +7,7 @@ import { DashboardPage } from "@/pages/DashboardPage";
 import { LoginPage } from "@/pages/LoginPage";
 import { MonitorsPage } from "@/pages/MonitorsPage";
 import { PostsPage } from "@/pages/PostsPage";
-import { AnalyticsPage } from "@/pages/Placeholders";
+import { AnalyticsPage } from "@/pages/AnalyticsPage";
 import { ProfilePage } from "@/pages/ProfilePage";
 import { ReviewPage } from "@/pages/ReviewPage";
 import { SettingsPage } from "@/pages/SettingsPage";

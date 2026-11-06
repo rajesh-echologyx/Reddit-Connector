@@ -17,8 +17,8 @@ This repository is a monorepo (`backend/` Django/DRF + `frontend/` Vite/React).
 | 2 Reddit integration | Merged |
 | 3 AI integration | Merged |
 | 4 Review workflow | Merged |
-| 5 Celery automation | This branch — Beat schedules, discover→analyze→draft, pause/resume, task monitoring (no auto-publish) |
-| 6 Analytics / production | Not started |
+| 5 Celery automation | PR #5 (base for this work) |
+| 6 Analytics / production | This branch |
 
 ## Quick start (Docker)
 
@@ -42,6 +42,40 @@ Then seed fixture posts (optional, `REDDIT_MODE=fixture`):
 docker compose exec web python manage.py seed_dev_reddit --poll
 # or locally: make seed-reddit
 ```
+
+## Documentation
+
+| Doc | Purpose |
+|-----|---------|
+| [docs/SETUP.md](docs/SETUP.md) | Local setup |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Production compose, TLS, backups |
+| [docs/TESTING.md](docs/TESTING.md) | Pytest / frontend / CI |
+| [docs/SECURITY.md](docs/SECURITY.md) | Security checklist sign-off |
+| [.env.example](.env.example) | Complete environment variable list |
+
+## Analytics (Phase 6)
+
+DailyStat rollups (Beat at 00:05 UTC) power the Analytics page and dashboard 7d strip.
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/api/v1/analytics/summary/?range=7\|30` | Counters + daily series |
+| GET | `/api/v1/analytics/funnel/?range=7\|30` | discovered → relevant → drafted → approved |
+
+```bash
+docker compose exec web python manage.py rollup_analytics --days 30
+```
+
+## Production
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
+```
+
+- nginx SPA + API proxy on port **8080**
+- Postgres/Redis not published to the host
+- `DJANGO_ENV=production` refuses `REDDIT_MODE=fixture` and insecure secrets
+- Auth login throttled (DRF + nginx)
 
 ## OpenAI modes (Phase 3)
 
@@ -144,6 +178,7 @@ Celery Beat schedules keyword monitors and chains discover → analyze → draft
 |------------|----------|------|
 | `dispatch-due-monitors-every-5-min` | every 5 min | `monitors.dispatch_due_monitors` |
 | `refresh-expiring-reddit-tokens-hourly` | hourly (:05) | `reddit.refresh_expiring_tokens` |
+| `rollup-daily-stats` | daily 00:05 UTC | `analytics.rollup_daily_stats` |
 
 | Method | Path | Purpose |
 |--------|------|---------|
@@ -180,13 +215,16 @@ Phase 3 profile/analysis and Phase 2 Reddit/monitors endpoints remain under `/ap
 ## Layout
 
 ```
-backend/     Django 5 + DRF + Celery (profiles, analysis, review apps)
+backend/     Django 5 + DRF + Celery (profiles, analysis, review, analytics)
 frontend/    Vite + React + TS + Tailwind
+deploy/      nginx + production frontend Dockerfile
+docs/        Setup, deployment, testing, security
 backend/fixtures/reddit/   Development sample posts
 backend/fixtures/openai/   Mock OpenAI JSON responses
 backend/apps/analysis/prompts/v1/  Prompt templates
 scripts/     wait-for-db, seed-dev
 docker-compose.yml
+docker-compose.prod.yml
 ```
 
 ## Security notes
@@ -196,3 +234,4 @@ docker-compose.yml
 - OpenAI key is server-side only.
 - `REDDIT_MODE=fixture` is refused when `DJANGO_ENV=production`.
 - Approve ≠ publish. `REDDIT_SUBMIT_ENABLED` defaults false; no auto-submit path.
+- Full checklist: [docs/SECURITY.md](docs/SECURITY.md).

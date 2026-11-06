@@ -62,6 +62,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -70,6 +71,16 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+# Default static storage; production overrides to CompressedManifest.
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 
 ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
@@ -138,6 +149,10 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
+    "DEFAULT_THROTTLE_RATES": {
+        "login": "20/minute",
+        "bootstrap": "5/hour",
+    },
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 25,
     "EXCEPTION_HANDLER": "apps.accounts.exceptions.api_exception_handler",
@@ -183,8 +198,7 @@ CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_ACKS_LATE = True
 
-# Phase 5 Beat schedule — discover loop + token refresh.
-# Analytics daily rollup lands in Phase 6.
+# Phase 5–6 Beat schedule — discover loop, token refresh, analytics rollup.
 CELERY_BEAT_SCHEDULE: dict = {
     "dispatch-due-monitors-every-5-min": {
         "task": "monitors.dispatch_due_monitors",
@@ -194,6 +208,11 @@ CELERY_BEAT_SCHEDULE: dict = {
     "refresh-expiring-reddit-tokens-hourly": {
         "task": "reddit.refresh_expiring_tokens",
         "schedule": crontab(minute=5),
+        "options": {"expires": 3500},
+    },
+    "rollup-daily-stats": {
+        "task": "analytics.rollup_daily_stats",
+        "schedule": crontab(hour=0, minute=5),
         "options": {"expires": 3500},
     },
 }
@@ -244,3 +263,45 @@ if OPENAI_MODE == "live" and not OPENAI_API_KEY and DJANGO_ENV == "production":
     raise ImproperlyConfigured(
         "OPENAI_MODE=live requires OPENAI_API_KEY when DJANGO_ENV=production."
     )
+
+# ---------------------------------------------------------------------------
+# Logging (redact secrets / Authorization headers)
+# ---------------------------------------------------------------------------
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {
+        "redact_secrets": {
+            "()": "apps.analytics.logging_filters.RedactSecretsFilter",
+        },
+    },
+    "formatters": {
+        "standard": {
+            "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "filters": ["redact_secrets"],
+            "formatter": "standard",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": env("LOG_LEVEL", "INFO") or "INFO",
+    },
+    "loggers": {
+        "django.request": {
+            "handlers": ["console"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        "celery": {
+            "handlers": ["console"],
+            "level": env("LOG_LEVEL", "INFO") or "INFO",
+            "propagate": False,
+        },
+    },
+}
