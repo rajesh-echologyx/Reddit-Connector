@@ -218,6 +218,7 @@ def generate_draft(post_id: str, *, force: bool = False) -> dict[str, Any]:
             status__in=[
                 DraftResponse.Status.DRAFT,
                 DraftResponse.Status.IN_REVIEW,
+                DraftResponse.Status.SAVED_FOR_LATER,
             ],
         ).update(status=DraftResponse.Status.DISCARDED)
 

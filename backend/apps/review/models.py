@@ -16,6 +16,10 @@ class ReviewAction(models.Model):
         REJECT = "reject", "Reject"
         EDIT = "edit", "Edit"
         REGENERATE = "regenerate", "Regenerate"
+        SAVE_FOR_LATER = "save_for_later", "Save for later"
+        MARK_PUBLISHED = "mark_published", "Mark published"
+        NOTE = "note", "Private note"
+        REOPEN = "reopen", "Return to queue"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     draft = models.ForeignKey(
@@ -28,7 +32,7 @@ class ReviewAction(models.Model):
         on_delete=models.CASCADE,
         related_name="review_actions",
     )
-    action = models.CharField(max_length=16, choices=Action.choices)
+    action = models.CharField(max_length=32, choices=Action.choices)
     notes = models.TextField(blank=True, default="")
     snapshot_body = models.TextField(blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
