@@ -8,11 +8,12 @@ from django.db import connection
 from django.middleware.csrf import get_token
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework import permissions, status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from .serializers import BootstrapSerializer, LoginSerializer, UserSerializer
+from .throttles import BootstrapRateThrottle, LoginRateThrottle
 
 User = get_user_model()
 
@@ -27,6 +28,7 @@ def csrf(request: Request) -> Response:
 
 @api_view(["POST"])
 @permission_classes([permissions.AllowAny])
+@throttle_classes([LoginRateThrottle])
 def login_view(request: Request) -> Response:
     serializer = LoginSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -50,6 +52,7 @@ def me(request: Request) -> Response:
 
 @api_view(["POST"])
 @permission_classes([permissions.AllowAny])
+@throttle_classes([BootstrapRateThrottle])
 def bootstrap(request: Request) -> Response:
     """Dev/first-run: create personal owner if zero users exist."""
     if not settings.ALLOW_BOOTSTRAP:

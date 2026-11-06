@@ -2,7 +2,14 @@ import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
-import { monitorsApi, opsApi, redditApi, reviewApi, tasksApi } from "@/api/client";
+import {
+  analyticsApi,
+  monitorsApi,
+  opsApi,
+  redditApi,
+  reviewApi,
+  tasksApi,
+} from "@/api/client";
 import { useAuth } from "@/hooks/useAuth";
 
 export function DashboardPage() {
@@ -31,6 +38,10 @@ export function DashboardPage() {
     queryKey: ["automation-status"],
     queryFn: () => tasksApi.automationStatus(),
     refetchInterval: 60_000,
+  });
+  const analytics = useQuery({
+    queryKey: ["analytics-summary", 7],
+    queryFn: () => analyticsApi.summary(7),
   });
 
   const connectionLabel =
@@ -116,6 +127,23 @@ export function DashboardPage() {
           )}
         </div>
       )}
+
+      <div className="space-y-2 border-t border-[var(--color-line)] pt-5">
+        <h2
+          className="text-lg text-[var(--color-moss-deep)]"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          Last 7 days
+        </h2>
+        <p className="text-sm text-black/70">
+          {analytics.data
+            ? `${analytics.data.totals.posts_discovered} discovered · ${analytics.data.totals.relevant_count} relevant · ${analytics.data.totals.drafts_generated} drafts · ${analytics.data.totals.approved} approved`
+            : "Loading analytics…"}{" "}
+          <Link className="underline underline-offset-2" to="/analytics">
+            Open analytics
+          </Link>
+        </p>
+      </div>
 
       <p className="text-sm text-black/50">
         Hard invariant: never auto-publish Reddit comments

@@ -18,6 +18,9 @@ jobs:
           python-version: "3.12"
       - name: Install
         run: pip install -r requirements-dev.txt
+      - name: Dependency audit (informational)
+        continue-on-error: true
+        run: pip install pip-audit && pip-audit -r requirements.txt
       - name: Test
         env:
           DJANGO_ENV: test
