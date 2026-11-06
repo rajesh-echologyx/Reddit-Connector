@@ -24,6 +24,8 @@ class RedditPostSerializer(serializers.ModelSerializer):
         read_only=True,
     )
     reddit_url = serializers.SerializerMethodField()
+    relevance_score = serializers.SerializerMethodField()
+    is_relevant = serializers.SerializerMethodField()
 
     class Meta:
         model = RedditPost
@@ -43,6 +45,8 @@ class RedditPostSerializer(serializers.ModelSerializer):
             "created_utc",
             "status",
             "monitor_id",
+            "relevance_score",
+            "is_relevant",
             "created_at",
             "updated_at",
         ]
@@ -54,6 +58,24 @@ class RedditPostSerializer(serializers.ModelSerializer):
                 return obj.permalink
             return f"https://www.reddit.com{obj.permalink}"
         return obj.url or ""
+
+    def _analysis_or_none(self, obj: RedditPost):
+        try:
+            return obj.analysis
+        except Exception:  # RelatedObjectDoesNotExist when unscored
+            return None
+
+    def get_relevance_score(self, obj: RedditPost) -> int | None:
+        analysis = self._analysis_or_none(obj)
+        if analysis is None:
+            return None
+        return analysis.relevance_score
+
+    def get_is_relevant(self, obj: RedditPost) -> bool | None:
+        analysis = self._analysis_or_none(obj)
+        if analysis is None:
+            return None
+        return analysis.is_relevant
 
 
 class RedditAccountSerializer(serializers.ModelSerializer):

@@ -14,8 +14,9 @@ This repository is a monorepo (`backend/` Django/DRF + `frontend/` Vite/React).
 | Phase | Status |
 |-------|--------|
 | 1 Foundation | Merged |
-| 2 Reddit integration | This branch — OAuth, monitors, fixture mode, posts |
-| 3+ AI / review / automation | Not started |
+| 2 Reddit integration | Merged |
+| 3 AI integration | This branch — profile, relevance, drafts, mock OpenAI |
+| 4+ Review polish / automation | Stubs only (approve ≠ publish) |
 
 ## Quick start (Docker)
 
@@ -39,6 +40,31 @@ Then seed fixture posts (optional, `REDDIT_MODE=fixture`):
 docker compose exec web python manage.py seed_dev_reddit --poll
 # or locally: make seed-reddit
 ```
+
+## OpenAI modes (Phase 3)
+
+### Mock mode (default for local / CI)
+
+```bash
+OPENAI_MODE=mock
+# OPENAI_API_KEY not required
+```
+
+- Uses deterministic JSON under `backend/fixtures/openai/`.
+- Same code paths as live (tasks → validate → persist).
+- Default in tests via `DJANGO_ENV=test`.
+
+### Live mode
+
+```bash
+OPENAI_MODE=live
+OPENAI_API_KEY=sk-...
+OPENAI_RELEVANCE_MODEL=gpt-4o-mini   # optional
+OPENAI_DRAFT_MODEL=gpt-4o-mini      # optional; per-user overrides on Profile
+RELEVANCE_THRESHOLD=70
+```
+
+Key is server-side only — never sent to the frontend.
 
 ## Reddit modes
 
@@ -76,7 +102,7 @@ python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().d
 
 5. Open **Settings** → Connect Reddit. Scopes requested: `identity`, `read` only (no submit).
 
-Disconnect clears local tokens and best-effort revokes the refresh token. **Approve ≠ publish** — there is no Reddit write path in Phase 2.
+Disconnect clears local tokens and best-effort revokes the refresh token. **Approve ≠ publish**.
 
 ## Local development (without Docker)
 
@@ -86,7 +112,7 @@ Disconnect clears local tokens and best-effort revokes the refresh token. **Appr
 cd backend
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements-dev.txt
-export DJANGO_ENV=local DJANGO_SECRET_KEY=dev ALLOW_BOOTSTRAP=true REDDIT_MODE=fixture
+export DJANGO_ENV=local DJANGO_SECRET_KEY=dev ALLOW_BOOTSTRAP=true REDDIT_MODE=fixture OPENAI_MODE=mock
 export TOKEN_ENCRYPTION_KEY=$(python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
 python manage.py migrate
 python manage.py runserver
@@ -108,30 +134,33 @@ Vite proxies `/api` to `http://localhost:8000`.
 make test
 ```
 
-## Phase 2 API
+## Phase 3 API
 
 | Method | Path | Purpose |
 |--------|------|---------|
-| GET | `/api/v1/reddit/oauth/start/` | Authorize URL (or fixture notice) |
-| GET | `/api/v1/reddit/oauth/callback/` | Code exchange → encrypted tokens |
-| GET | `/api/v1/reddit/status/` | Connection status / username / mode |
-| POST | `/api/v1/reddit/disconnect/` | Local revoke (+ best-effort Reddit revoke) |
-| GET/POST | `/api/v1/monitors/` | List/create monitors |
-| GET/PATCH/DELETE | `/api/v1/monitors/{id}/` | Detail/update/delete |
-| POST | `/api/v1/monitors/{id}/run/` | Manual poll (enqueue `poll_monitor`) |
-| GET/POST | `/api/v1/monitors/{id}/keywords/` | Keywords CRUD |
-| PUT | `/api/v1/monitors/{id}/subreddits/` | Replace subreddit set |
-| GET | `/api/v1/posts/` | Discovered posts (`status`, `subreddit`, `q`, `min_score`) |
-| GET | `/api/v1/posts/{id}/` | Post detail |
+| GET/PATCH | `/api/v1/profile/` | Expertise, tone, constraints, model overrides |
+| GET/POST | `/api/v1/writing-samples/` | List/create samples (max 5 active) |
+| PATCH/DELETE | `/api/v1/writing-samples/{id}/` | Update/delete |
+| GET | `/api/v1/posts/{id}/` | Detail + analysis + drafts |
+| POST | `/api/v1/posts/{id}/analyze/` | Enqueue relevance (`OPENAI_MODE`) |
+| POST | `/api/v1/posts/{id}/draft/` | Enqueue draft (requires relevant analysis) |
+| GET | `/api/v1/review/queue/` | Drafts in `draft`/`in_review` |
+| POST | `/api/v1/review/{id}/edit/` | Save `body_edited` |
+| POST | `/api/v1/review/{id}/approve/` | Local approve — **does not post** |
+| POST | `/api/v1/review/{id}/reject/` | Reject + notes |
+| POST | `/api/v1/review/{id}/regenerate/` | New draft; old discarded |
+| GET | `/api/v1/review/{id}/export/` | Clipboard text + permalink |
 
-Auth endpoints from Phase 1 remain under `/api/v1/auth/` and `/api/v1/health/`.
+Phase 2 Reddit/monitors endpoints remain under `/api/v1/reddit/`, `/api/v1/monitors/`, `/api/v1/posts/`.
 
 ## Layout
 
 ```
-backend/     Django 5 + DRF + Celery (reddit + monitors apps)
+backend/     Django 5 + DRF + Celery (profiles, analysis, review apps)
 frontend/    Vite + React + TS + Tailwind
 backend/fixtures/reddit/   Development sample posts
+backend/fixtures/openai/   Mock OpenAI JSON responses
+backend/apps/analysis/prompts/v1/  Prompt templates
 scripts/     wait-for-db, seed-dev
 docker-compose.yml
 ```
@@ -140,5 +169,6 @@ docker-compose.yml
 
 - Keep secrets in `.env` (gitignored). `.env.example` has placeholders only.
 - Reddit tokens encrypted at rest with Fernet (`TOKEN_ENCRYPTION_KEY`).
+- OpenAI key is server-side only.
 - `REDDIT_MODE=fixture` is refused when `DJANGO_ENV=production`.
-- Approve ≠ publish. No Reddit comment write path in Phase 2.
+- Approve ≠ publish. No Reddit comment write path.

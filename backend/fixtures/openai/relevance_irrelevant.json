@@ -1,0 +1,11 @@
+{
+  "relevance_score": 20,
+  "is_relevant": false,
+  "reasons": [
+    "Post topic does not overlap with stated expertise.",
+    "A reply would be speculative or off-topic."
+  ],
+  "matched_expertise": [],
+  "risk_flags": ["off_topic"],
+  "summary": "Off-topic relative to the operator's profile."
+}

@@ -100,6 +100,7 @@ def health(request: Request) -> Response:
         "db": db_ok,
         "redis": redis_ok,
         "reddit_mode": getattr(settings, "REDDIT_MODE", "unknown"),
+        "openai_mode": getattr(settings, "OPENAI_MODE", "mock"),
         "never_auto_publish": True,
     }
     code = status.HTTP_200_OK if db_ok else status.HTTP_503_SERVICE_UNAVAILABLE

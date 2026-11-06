@@ -92,6 +92,7 @@ export type Health = {
   db: boolean;
   redis: boolean;
   reddit_mode: string;
+  openai_mode?: string;
   never_auto_publish: boolean;
 };
 
@@ -122,6 +123,48 @@ export type RedditStatus = {
   never_auto_publish: boolean;
 };
 
+export type RelevanceAnalysis = {
+  id: string;
+  relevance_score: number;
+  is_relevant: boolean;
+  reasons: string[];
+  matched_expertise: string[];
+  risk_flags: string[];
+  summary: string;
+  model: string;
+  prompt_version: string;
+  status: string;
+  error_message: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type DraftResponse = {
+  id: string;
+  post: string;
+  analysis: string | null;
+  body: string;
+  body_edited: string | null;
+  effective_body: string;
+  status: string;
+  tone: string;
+  claims_made: string[];
+  needs_human_check: string[];
+  model: string;
+  prompt_version: string;
+  error_message: string;
+  generated_at: string | null;
+  approved_at: string | null;
+  rejected_at: string | null;
+  created_at: string;
+  updated_at: string;
+  never_auto_publish: boolean;
+  post_title?: string;
+  post_subreddit?: string;
+  relevance_score?: number | null;
+  permalink?: string;
+};
+
 export type RedditPost = {
   id: string;
   reddit_fullname: string;
@@ -138,6 +181,33 @@ export type RedditPost = {
   created_utc: string | null;
   status: string;
   monitor_id: string | null;
+  relevance_score?: number | null;
+  is_relevant?: boolean | null;
+  analysis?: RelevanceAnalysis | null;
+  drafts?: DraftResponse[];
+  created_at: string;
+  updated_at: string;
+};
+
+export type UserProfile = {
+  id: string;
+  display_name: string;
+  bio_short: string;
+  expertise_topics: string[];
+  tone_notes: string;
+  hard_constraints: string;
+  openai_relevance_model: string;
+  openai_draft_model: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type WritingSample = {
+  id: string;
+  title: string;
+  body: string;
+  source: "manual" | "imported";
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -196,6 +266,60 @@ export const redditApi = {
     return api<Paginated<RedditPost>>(`/posts/${qs}`);
   },
   post: (id: string) => api<RedditPost>(`/posts/${id}/`),
+  analyze: (id: string, force = false) =>
+    api<{ detail: string; task_id: string; result?: unknown; never_auto_publish: boolean }>(
+      `/posts/${id}/analyze/`,
+      { method: "POST", json: { force } },
+    ),
+  draft: (id: string, force = false) =>
+    api<{ detail: string; task_id: string; result?: unknown; never_auto_publish: boolean }>(
+      `/posts/${id}/draft/`,
+      { method: "POST", json: { force } },
+    ),
+};
+
+export const profileApi = {
+  get: () => api<UserProfile>("/profile/"),
+  update: (body: Partial<UserProfile>) =>
+    api<UserProfile>("/profile/", { method: "PATCH", json: body }),
+  listSamples: () => api<Paginated<WritingSample>>("/writing-samples/"),
+  createSample: (body: { title: string; body: string; is_active?: boolean }) =>
+    api<WritingSample>("/writing-samples/", { method: "POST", json: body }),
+  updateSample: (id: string, body: Partial<WritingSample>) =>
+    api<WritingSample>(`/writing-samples/${id}/`, { method: "PATCH", json: body }),
+  deleteSample: (id: string) =>
+    api<void>(`/writing-samples/${id}/`, { method: "DELETE" }),
+};
+
+export const reviewApi = {
+  queue: (status = "in_review,draft") =>
+    api<{ count: number; results: DraftResponse[]; never_auto_publish: boolean }>(
+      `/review/queue/?status=${encodeURIComponent(status)}`,
+    ),
+  edit: (id: string, body_edited: string, notes = "") =>
+    api<DraftResponse>(`/review/${id}/edit/`, {
+      method: "POST",
+      json: { body_edited, notes },
+    }),
+  approve: (id: string, notes = "") =>
+    api<{ detail: string; draft: DraftResponse; never_auto_publish: boolean }>(
+      `/review/${id}/approve/`,
+      { method: "POST", json: { notes } },
+    ),
+  reject: (id: string, notes = "") =>
+    api<{ detail: string; draft: DraftResponse; never_auto_publish: boolean }>(
+      `/review/${id}/reject/`,
+      { method: "POST", json: { notes } },
+    ),
+  regenerate: (id: string) =>
+    api<{ detail: string; task_id: string; never_auto_publish: boolean }>(
+      `/review/${id}/regenerate/`,
+      { method: "POST", json: {} },
+    ),
+  export: (id: string) =>
+    api<{ text: string; permalink: string; never_auto_publish: boolean }>(
+      `/review/${id}/export/`,
+    ),
 };
 
 export const monitorsApi = {

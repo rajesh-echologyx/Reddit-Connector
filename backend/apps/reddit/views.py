@@ -180,7 +180,7 @@ class RedditPostListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        qs = RedditPost.objects.filter(user=self.request.user)
+        qs = RedditPost.objects.filter(user=self.request.user).select_related("analysis")
         status_filter = self.request.query_params.get("status")
         subreddit = self.request.query_params.get("subreddit")
         q = self.request.query_params.get("q")
@@ -197,11 +197,3 @@ class RedditPostListView(generics.ListAPIView):
             except ValueError:
                 pass
         return qs
-
-
-class RedditPostDetailView(generics.RetrieveAPIView):
-    serializer_class = RedditPostSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        return RedditPost.objects.filter(user=self.request.user)
