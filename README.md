@@ -17,7 +17,7 @@ This repository is a monorepo (`backend/` Django/DRF + `frontend/` Vite/React).
 | 2 Reddit integration | Merged |
 | 3 AI integration | Merged |
 | 4 Review workflow | Merged |
-| 5 Celery automation | PR #5 (base for this work) |
+| 5 Celery automation | Merged |
 | 6 Analytics / production | This branch |
 
 ## Quick start (Docker)
