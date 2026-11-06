@@ -11,6 +11,16 @@ urlpatterns = [
         name="monitors-run",
     ),
     path(
+        "monitors/<uuid:pk>/pause/",
+        views.MonitorPauseView.as_view(),
+        name="monitors-pause",
+    ),
+    path(
+        "monitors/<uuid:pk>/resume/",
+        views.MonitorResumeView.as_view(),
+        name="monitors-resume",
+    ),
+    path(
         "monitors/<uuid:pk>/keywords/",
         views.MonitorKeywordListCreateView.as_view(),
         name="monitors-keywords",
@@ -24,5 +34,12 @@ urlpatterns = [
         "monitors/<uuid:pk>/subreddits/",
         views.MonitorSubredditsReplaceView.as_view(),
         name="monitors-subreddits",
+    ),
+    path("tasks/", views.TaskRunListView.as_view(), name="tasks-list"),
+    path("tasks/<uuid:pk>/", views.TaskRunDetailView.as_view(), name="tasks-detail"),
+    path(
+        "automation/status/",
+        views.AutomationStatusView.as_view(),
+        name="automation-status",
     ),
 ]

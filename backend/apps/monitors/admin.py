@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Keyword, Monitor, Subreddit
+from .models import Keyword, Monitor, Subreddit, TaskRun
 
 
 class KeywordInline(admin.TabularInline):
@@ -10,10 +10,17 @@ class KeywordInline(admin.TabularInline):
 
 @admin.register(Monitor)
 class MonitorAdmin(admin.ModelAdmin):
-    list_display = ("name", "user", "is_active", "poll_interval_minutes", "last_polled_at")
-    list_filter = ("is_active",)
+    list_display = (
+        "name",
+        "user",
+        "is_active",
+        "auto_analyze",
+        "auto_draft",
+        "poll_interval_minutes",
+        "last_polled_at",
+    )
+    list_filter = ("is_active", "auto_analyze", "auto_draft")
     search_fields = ("name", "user__username")
-    filter_horizontal = ("subreddits",)
     inlines = [KeywordInline]
 
 
@@ -28,3 +35,34 @@ class KeywordAdmin(admin.ModelAdmin):
     list_display = ("phrase", "match_mode", "monitor", "created_at")
     list_filter = ("match_mode",)
     search_fields = ("phrase",)
+
+
+@admin.register(TaskRun)
+class TaskRunAdmin(admin.ModelAdmin):
+    list_display = (
+        "task_name",
+        "status",
+        "user",
+        "monitor",
+        "retries",
+        "started_at",
+        "finished_at",
+    )
+    list_filter = ("status", "task_name")
+    search_fields = ("celery_task_id", "message", "task_name")
+    readonly_fields = (
+        "id",
+        "task_name",
+        "celery_task_id",
+        "status",
+        "user",
+        "monitor",
+        "post_id",
+        "message",
+        "result",
+        "retries",
+        "started_at",
+        "finished_at",
+        "created_at",
+        "updated_at",
+    )

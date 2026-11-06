@@ -69,6 +69,94 @@ def get_decrypted_access_token(account: RedditAccount) -> str:
     return decrypt_token(account.access_token_encrypted)
 
 
+def get_decrypted_refresh_token(account: RedditAccount) -> str:
+    if account.status == RedditAccount.Status.DEV_FIXTURE:
+        return ""
+    return decrypt_token(account.refresh_token_encrypted)
+
+
+def mark_account_expired(account: RedditAccount, *, reason: str = "") -> RedditAccount:
+    """Flip account to expired so Beat skips polls until reconnect."""
+    account.status = RedditAccount.Status.EXPIRED
+    account.save(update_fields=["status", "updated_at"])
+    if reason:
+        logger.warning(
+            "Reddit account %s marked expired: %s", account.pk, reason
+        )
+    return account
+
+
+def apply_refreshed_tokens(
+    account: RedditAccount,
+    *,
+    access_token: str,
+    refresh_token: str | None = None,
+    expires_in: int | None = None,
+) -> RedditAccount:
+    """Persist a successful token refresh and restore connected status."""
+    account.access_token_encrypted = encrypt_token(access_token)
+    if refresh_token:
+        account.refresh_token_encrypted = encrypt_token(refresh_token)
+    if expires_in:
+        account.token_expires_at = dj_timezone.now() + timedelta(seconds=int(expires_in))
+    account.status = RedditAccount.Status.CONNECTED
+    account.save(
+        update_fields=[
+            "access_token_encrypted",
+            "refresh_token_encrypted",
+            "token_expires_at",
+            "status",
+            "updated_at",
+        ]
+    )
+    return account
+
+
+def refresh_account_tokens(account: RedditAccount) -> dict[str, Any]:
+    """Refresh one account's access token. Marks expired on auth failure."""
+    from .client import RedditRateLimitError, refresh_access_token
+
+    if account.status == RedditAccount.Status.DEV_FIXTURE:
+        return {"ok": True, "skipped": True, "reason": "dev_fixture"}
+    if account.status == RedditAccount.Status.REVOKED:
+        return {"ok": False, "skipped": True, "reason": "revoked"}
+
+    refresh = get_decrypted_refresh_token(account)
+    if not refresh:
+        mark_account_expired(account, reason="missing_refresh_token")
+        return {"ok": False, "error": "missing_refresh_token", "expired": True}
+
+    try:
+        payload = refresh_access_token(refresh)
+    except RedditRateLimitError:
+        raise
+    except Exception as exc:  # noqa: BLE001
+        # Invalid grant / 401 → expire so polls pause.
+        status_code = getattr(getattr(exc, "response", None), "status_code", None)
+        message = str(exc).lower()
+        if status_code in {400, 401, 403} or "invalid_grant" in message:
+            mark_account_expired(account, reason=str(exc))
+            return {"ok": False, "error": str(exc), "expired": True}
+        raise
+
+    access = payload.get("access_token")
+    if not access:
+        mark_account_expired(account, reason="refresh_missing_access_token")
+        return {"ok": False, "error": "refresh_missing_access_token", "expired": True}
+
+    apply_refreshed_tokens(
+        account,
+        access_token=access,
+        refresh_token=payload.get("refresh_token"),
+        expires_in=payload.get("expires_in"),
+    )
+    return {
+        "ok": True,
+        "account_id": str(account.pk),
+        "expires_in": payload.get("expires_in"),
+    }
+
+
 def client_for_account(account: RedditAccount):
     if settings.REDDIT_MODE == "fixture" or account.status == RedditAccount.Status.DEV_FIXTURE:
         return get_reddit_client()

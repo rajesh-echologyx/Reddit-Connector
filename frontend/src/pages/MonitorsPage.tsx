@@ -46,6 +46,27 @@ export function MonitorsPage() {
       setMessage(`Poll finished / enqueued (${data.task_id.slice(0, 8)}…).`);
       await queryClient.invalidateQueries({ queryKey: ["monitors"] });
       await queryClient.invalidateQueries({ queryKey: ["posts"] });
+      await queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    },
+    onError: (err: Error) => setMessage(err.message),
+  });
+
+  const pause = useMutation({
+    mutationFn: (id: string) => monitorsApi.pause(id),
+    onSuccess: async () => {
+      setMessage("Monitor paused — Beat will skip it.");
+      await queryClient.invalidateQueries({ queryKey: ["monitors"] });
+      await queryClient.invalidateQueries({ queryKey: ["automation-status"] });
+    },
+    onError: (err: Error) => setMessage(err.message),
+  });
+
+  const resume = useMutation({
+    mutationFn: (id: string) => monitorsApi.resume(id),
+    onSuccess: async () => {
+      setMessage("Monitor resumed.");
+      await queryClient.invalidateQueries({ queryKey: ["monitors"] });
+      await queryClient.invalidateQueries({ queryKey: ["automation-status"] });
     },
     onError: (err: Error) => setMessage(err.message),
   });
@@ -72,6 +93,8 @@ export function MonitorsPage() {
   }
 
   const items = monitors.data?.results ?? [];
+  const busy =
+    run.isPending || remove.isPending || pause.isPending || resume.isPending;
 
   return (
     <section className="space-y-8">
@@ -83,8 +106,9 @@ export function MonitorsPage() {
           Monitors
         </h1>
         <p className="max-w-2xl text-black/70">
-          Keyword and subreddit searches via the official Reddit API. Run now
-          discovers posts; it never publishes comments.
+          Keyword and subreddit searches on a Celery Beat schedule. Run now
+          discovers posts; auto-analyze and auto-draft fill the review queue —
+          never publishes comments.
         </p>
       </header>
 
@@ -125,9 +149,11 @@ export function MonitorsPage() {
             key={monitor.id}
             monitor={monitor}
             onRun={() => run.mutate(monitor.id)}
+            onPause={() => pause.mutate(monitor.id)}
+            onResume={() => resume.mutate(monitor.id)}
             onDelete={() => remove.mutate(monitor.id)}
             onAddKeyword={(value) => addKeyword.mutate({ id: monitor.id, value })}
-            busy={run.isPending || remove.isPending}
+            busy={busy}
           />
         ))}
         {!monitors.isLoading && items.length === 0 && (
@@ -141,12 +167,16 @@ export function MonitorsPage() {
 function MonitorRow({
   monitor,
   onRun,
+  onPause,
+  onResume,
   onDelete,
   onAddKeyword,
   busy,
 }: {
   monitor: Monitor;
   onRun: () => void;
+  onPause: () => void;
+  onResume: () => void;
   onDelete: () => void;
   onAddKeyword: (value: string) => void;
   busy: boolean;
@@ -169,17 +199,32 @@ function MonitorRow({
             {monitor.last_polled_at
               ? new Date(monitor.last_polled_at).toLocaleString()
               : "never"}
+            {monitor.auto_analyze ? " · auto-analyze" : ""}
+            {monitor.auto_draft ? " · auto-draft" : ""}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button size="sm" onClick={onRun} disabled={busy || !monitor.keywords.length}>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" onClick={onRun} disabled={busy || !monitor.keywords.length || !monitor.is_active}>
             Run now
           </Button>
+          {monitor.is_active ? (
+            <Button size="sm" variant="outline" onClick={onPause} disabled={busy}>
+              Pause
+            </Button>
+          ) : (
+            <Button size="sm" variant="outline" onClick={onResume} disabled={busy}>
+              Resume
+            </Button>
+          )}
           <Button size="sm" variant="outline" onClick={onDelete} disabled={busy}>
             Delete
           </Button>
         </div>
       </div>
+
+      {monitor.last_error ? (
+        <p className="text-sm text-red-800/80">Last error: {monitor.last_error}</p>
+      ) : null}
 
       <p className="text-sm text-black/65">
         Subreddits:{" "}
