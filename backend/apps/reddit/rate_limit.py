@@ -1,7 +1,7 @@
 """Conservative Reddit rate-limit helpers (Redis-backed when available).
 
-Phase 2 ships stubs that honor Retry-After / remaining headers and an
-in-process / Redis token bucket. Full Beat stampede protection lands in Phase 5.
+Honors Retry-After / remaining headers, Redis token bucket, and per-account
+locks so Celery Beat cannot stampede a single RedditAccount.
 """
 
 from __future__ import annotations

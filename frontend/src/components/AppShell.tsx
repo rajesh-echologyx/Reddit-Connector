@@ -12,6 +12,7 @@ const nav = [
   { to: "/review", label: "Review", badgeKey: "review" as const },
   { to: "/posts", label: "Posts" },
   { to: "/monitors", label: "Monitors" },
+  { to: "/tasks", label: "Tasks" },
   { to: "/profile", label: "Profile" },
   { to: "/settings", label: "Settings" },
   { to: "/analytics", label: "Analytics" },

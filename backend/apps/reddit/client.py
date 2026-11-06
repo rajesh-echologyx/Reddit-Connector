@@ -284,6 +284,39 @@ def exchange_code_for_tokens(code: str) -> dict[str, Any]:
         return response.json()
 
 
+def refresh_access_token(refresh_token: str) -> dict[str, Any]:
+    """Refresh an OAuth access token using a permanent refresh token."""
+    import httpx
+
+    if not refresh_token:
+        raise ValueError("refresh_token required")
+    if not settings.REDDIT_CLIENT_ID:
+        raise ValueError("REDDIT_CLIENT_ID required to refresh tokens")
+
+    auth = (settings.REDDIT_CLIENT_ID, settings.REDDIT_CLIENT_SECRET)
+    data = {
+        "grant_type": "refresh_token",
+        "refresh_token": refresh_token,
+    }
+    headers = {"User-Agent": settings.REDDIT_USER_AGENT}
+    with httpx.Client(timeout=30.0) as client:
+        response = client.post(
+            "https://www.reddit.com/api/v1/access_token",
+            data=data,
+            auth=auth,
+            headers=headers,
+        )
+        if response.status_code == 429:
+            from .rate_limit import backoff_from_headers
+
+            wait = backoff_from_headers(dict(response.headers))
+            raise RedditRateLimitError(
+                wait_seconds=wait or 60.0, headers=dict(response.headers)
+            )
+        response.raise_for_status()
+        return response.json()
+
+
 def revoke_token(token: str) -> None:
     """Best-effort token revoke (ignore failures)."""
     import httpx

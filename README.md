@@ -16,8 +16,9 @@ This repository is a monorepo (`backend/` Django/DRF + `frontend/` Vite/React).
 | 1 Foundation | Merged |
 | 2 Reddit integration | Merged |
 | 3 AI integration | Merged |
-| 4 Review workflow | This branch — queue polish, audit log, copy/export (no auto-submit) |
-| 5+ Celery automation / analytics | Not started |
+| 4 Review workflow | Merged |
+| 5 Celery automation | This branch — Beat schedules, discover→analyze→draft, pause/resume, task monitoring (no auto-publish) |
+| 6 Analytics / production | Not started |
 
 ## Quick start (Docker)
 
@@ -134,6 +135,25 @@ Vite proxies `/api` to `http://localhost:8000`.
 ```bash
 make test
 ```
+
+## Celery automation (Phase 5)
+
+Celery Beat schedules keyword monitors and chains discover → analyze → draft into the review queue. **Never auto-publishes.**
+
+| Beat entry | Schedule | Task |
+|------------|----------|------|
+| `dispatch-due-monitors-every-5-min` | every 5 min | `monitors.dispatch_due_monitors` |
+| `refresh-expiring-reddit-tokens-hourly` | hourly (:05) | `reddit.refresh_expiring_tokens` |
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| POST | `/api/v1/monitors/{id}/pause/` | Pause Beat polling |
+| POST | `/api/v1/monitors/{id}/resume/` | Resume (blocked if Reddit token expired) |
+| GET | `/api/v1/tasks/` | Recent Celery task runs |
+| GET | `/api/v1/tasks/{id}/` | Task run detail |
+| GET | `/api/v1/automation/status/` | Dashboard summary + failures |
+
+Per-monitor `auto_analyze` / `auto_draft` (defaults true) and env `MONITOR_AUTO_ANALYZE` / `MONITOR_AUTO_DRAFT` control the chain. Expired Reddit tokens flip account status and skip polls until reconnect.
 
 ## Review workflow (Phase 4)
 

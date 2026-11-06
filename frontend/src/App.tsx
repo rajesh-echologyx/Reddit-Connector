@@ -11,6 +11,7 @@ import { AnalyticsPage } from "@/pages/Placeholders";
 import { ProfilePage } from "@/pages/ProfilePage";
 import { ReviewPage } from "@/pages/ReviewPage";
 import { SettingsPage } from "@/pages/SettingsPage";
+import { TasksPage } from "@/pages/TasksPage";
 
 import type { ReactNode } from "react";
 
@@ -49,6 +50,7 @@ export default function App() {
               <Route path="/review" element={<ReviewPage />} />
               <Route path="/posts" element={<PostsPage />} />
               <Route path="/monitors" element={<MonitorsPage />} />
+              <Route path="/tasks" element={<TasksPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/analytics" element={<AnalyticsPage />} />

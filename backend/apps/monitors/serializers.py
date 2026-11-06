@@ -1,10 +1,10 @@
-"""Serializers for monitors, keywords, and subreddits."""
+"""Serializers for monitors, keywords, and task runs."""
 
 from __future__ import annotations
 
 from rest_framework import serializers
 
-from .models import Keyword, Monitor, Subreddit
+from .models import Keyword, Monitor, Subreddit, TaskRun
 
 
 class SubredditSerializer(serializers.ModelSerializer):
@@ -29,6 +29,7 @@ class MonitorSerializer(serializers.ModelSerializer):
         write_only=True,
         required=False,
     )
+    never_auto_publish = serializers.SerializerMethodField()
 
     class Meta:
         model = Monitor
@@ -36,6 +37,8 @@ class MonitorSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "is_active",
+            "auto_analyze",
+            "auto_draft",
             "poll_interval_minutes",
             "min_score",
             "min_comments",
@@ -44,10 +47,26 @@ class MonitorSerializer(serializers.ModelSerializer):
             "subreddits",
             "subreddit_names",
             "last_polled_at",
+            "last_error",
+            "last_error_at",
             "created_at",
             "updated_at",
+            "never_auto_publish",
         ]
-        read_only_fields = ["id", "keywords", "subreddits", "last_polled_at", "created_at", "updated_at"]
+        read_only_fields = [
+            "id",
+            "keywords",
+            "subreddits",
+            "last_polled_at",
+            "last_error",
+            "last_error_at",
+            "created_at",
+            "updated_at",
+            "never_auto_publish",
+        ]
+
+    def get_never_auto_publish(self, obj) -> bool:  # noqa: ARG002
+        return True
 
     def validate_poll_interval_minutes(self, value: int) -> int:
         if value < 5:
@@ -93,3 +112,37 @@ class KeywordCreateSerializer(serializers.ModelSerializer):
         if not value:
             raise serializers.ValidationError("phrase is required.")
         return value
+
+
+class TaskRunSerializer(serializers.ModelSerializer):
+    monitor_name = serializers.SerializerMethodField()
+    never_auto_publish = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TaskRun
+        fields = [
+            "id",
+            "task_name",
+            "celery_task_id",
+            "status",
+            "monitor",
+            "monitor_name",
+            "post_id",
+            "message",
+            "result",
+            "retries",
+            "started_at",
+            "finished_at",
+            "created_at",
+            "updated_at",
+            "never_auto_publish",
+        ]
+        read_only_fields = fields
+
+    def get_monitor_name(self, obj: TaskRun) -> str | None:
+        if obj.monitor_id and obj.monitor:
+            return obj.monitor.name
+        return None
+
+    def get_never_auto_publish(self, obj) -> bool:  # noqa: ARG002
+        return True

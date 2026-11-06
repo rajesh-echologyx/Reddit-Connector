@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+from celery.schedules import crontab
 from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -181,7 +182,25 @@ CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_ACKS_LATE = True
-CELERY_BEAT_SCHEDULE: dict = {}  # populated in later phases
+
+# Phase 5 Beat schedule — discover loop + token refresh.
+# Analytics daily rollup lands in Phase 6.
+CELERY_BEAT_SCHEDULE: dict = {
+    "dispatch-due-monitors-every-5-min": {
+        "task": "monitors.dispatch_due_monitors",
+        "schedule": 300.0,
+        "options": {"expires": 240},
+    },
+    "refresh-expiring-reddit-tokens-hourly": {
+        "task": "reddit.refresh_expiring_tokens",
+        "schedule": crontab(minute=5),
+        "options": {"expires": 3500},
+    },
+}
+
+# Auto-chain defaults (per-monitor flags can disable). Never auto-publish.
+MONITOR_AUTO_ANALYZE = env_bool("MONITOR_AUTO_ANALYZE", True)
+MONITOR_AUTO_DRAFT = env_bool("MONITOR_AUTO_DRAFT", True)
 
 # ---------------------------------------------------------------------------
 # Application settings

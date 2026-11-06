@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
-import { monitorsApi, opsApi, redditApi, reviewApi } from "@/api/client";
+import { monitorsApi, opsApi, redditApi, reviewApi, tasksApi } from "@/api/client";
 import { useAuth } from "@/hooks/useAuth";
 
 export function DashboardPage() {
@@ -27,12 +27,20 @@ export function DashboardPage() {
     queryKey: ["review-queue"],
     queryFn: () => reviewApi.queue(),
   });
+  const automation = useQuery({
+    queryKey: ["automation-status"],
+    queryFn: () => tasksApi.automationStatus(),
+    refetchInterval: 60_000,
+  });
 
   const connectionLabel =
     reddit.data?.reddit_username ||
     reddit.data?.status ||
     health.data?.reddit_mode ||
     "…";
+
+  const failing = automation.data?.failing_monitors ?? [];
+  const tokenExpired = automation.data?.reddit_status === "expired";
 
   return (
     <section className="space-y-6">
@@ -44,8 +52,8 @@ export function DashboardPage() {
           Dashboard
         </h1>
         <p className="max-w-2xl text-black/70">
-          Welcome{user ? `, ${user.username}` : ""}. Review drafts, copy replies,
-          and open the original Reddit post — never auto-submit.
+          Welcome{user ? `, ${user.username}` : ""}. Beat keeps monitors polling;
+          drafts land in review for a human — never auto-submit.
         </p>
       </div>
 
@@ -76,10 +84,44 @@ export function DashboardPage() {
         />
       </div>
 
+      {(tokenExpired || failing.length > 0 || (automation.data?.task_runs_failed ?? 0) > 0) && (
+        <div className="space-y-2 border-t border-[var(--color-line)] pt-5">
+          <h2
+            className="text-lg text-[var(--color-moss-deep)]"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            Automation alerts
+          </h2>
+          {tokenExpired && (
+            <p className="text-sm text-black/70">
+              Reddit token expired — scheduled polls are paused.{" "}
+              <Link className="underline underline-offset-2" to="/settings">
+                Reconnect in Settings
+              </Link>
+              .
+            </p>
+          )}
+          {failing.slice(0, 3).map((m) => (
+            <p key={m.id} className="text-sm text-black/70">
+              {m.name}: {m.last_error}
+            </p>
+          ))}
+          {(automation.data?.task_runs_failed ?? 0) > 0 && (
+            <p className="text-sm text-black/55">
+              <Link className="underline underline-offset-2" to="/tasks">
+                View {automation.data?.task_runs_failed} failed task run
+                {(automation.data?.task_runs_failed ?? 0) === 1 ? "" : "s"}
+              </Link>
+            </p>
+          )}
+        </div>
+      )}
+
       <p className="text-sm text-black/50">
         Hard invariant: never auto-publish Reddit comments
         {health.data?.never_auto_publish ? " ✓" : ""}. OpenAI mode:{" "}
-        {health.data?.openai_mode ?? "…"}.
+        {health.data?.openai_mode ?? "…"}. Active monitors:{" "}
+        {automation.data?.monitors_active ?? "…"}.
       </p>
     </section>
   );

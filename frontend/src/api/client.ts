@@ -248,6 +248,8 @@ export type Monitor = {
   id: string;
   name: string;
   is_active: boolean;
+  auto_analyze: boolean;
+  auto_draft: boolean;
   poll_interval_minutes: number;
   min_score: number | null;
   min_comments: number | null;
@@ -255,8 +257,53 @@ export type Monitor = {
   keywords: Keyword[];
   subreddits: Subreddit[];
   last_polled_at: string | null;
+  last_error: string;
+  last_error_at: string | null;
   created_at: string;
   updated_at: string;
+  never_auto_publish?: boolean;
+};
+
+export type TaskRun = {
+  id: string;
+  task_name: string;
+  celery_task_id: string;
+  status: "pending" | "started" | "success" | "failure" | "retry" | "skipped";
+  monitor: string | null;
+  monitor_name: string | null;
+  post_id: string | null;
+  message: string;
+  result: Record<string, unknown>;
+  retries: number;
+  started_at: string | null;
+  finished_at: string | null;
+  created_at: string;
+  updated_at: string;
+  never_auto_publish: boolean;
+};
+
+export type AutomationStatus = {
+  monitors_active: number;
+  monitors_paused: number;
+  monitors_with_errors: number;
+  failing_monitors: Array<{
+    id: string;
+    name: string;
+    last_error: string;
+    last_error_at: string | null;
+    is_active: boolean;
+  }>;
+  task_runs_total: number;
+  task_runs_failed: number;
+  due_reviews: number;
+  analysis_failed: number;
+  posts_awaiting_analysis: number;
+  reddit_status: string | null;
+  beat_schedule: string[];
+  auto_analyze_default: boolean;
+  auto_draft_default: boolean;
+  never_auto_publish: boolean;
+  server_time: string;
 };
 
 export type Paginated<T> = {
@@ -397,8 +444,30 @@ export const monitorsApi = {
       json: { subreddits },
     }),
   run: (id: string) =>
-    api<{ detail: string; task_id: string; result?: unknown }>(`/monitors/${id}/run/`, {
-      method: "POST",
-      json: {},
-    }),
+    api<{ detail: string; task_id: string; result?: unknown; never_auto_publish: boolean }>(
+      `/monitors/${id}/run/`,
+      {
+        method: "POST",
+        json: {},
+      },
+    ),
+  pause: (id: string) =>
+    api<{ detail: string; monitor: Monitor; never_auto_publish: boolean }>(
+      `/monitors/${id}/pause/`,
+      { method: "POST", json: {} },
+    ),
+  resume: (id: string) =>
+    api<{ detail: string; monitor: Monitor; never_auto_publish: boolean }>(
+      `/monitors/${id}/resume/`,
+      { method: "POST", json: {} },
+    ),
+};
+
+export const tasksApi = {
+  list: (params?: Record<string, string>) => {
+    const qs = params ? `?${new URLSearchParams(params)}` : "";
+    return api<Paginated<TaskRun>>(`/tasks/${qs}`);
+  },
+  get: (id: string) => api<TaskRun>(`/tasks/${id}/`),
+  automationStatus: () => api<AutomationStatus>("/automation/status/"),
 };
