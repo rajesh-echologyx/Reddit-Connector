@@ -56,8 +56,10 @@ class DraftResponse(models.Model):
     class Status(models.TextChoices):
         DRAFT = "draft", "Draft"
         IN_REVIEW = "in_review", "In review"
+        SAVED_FOR_LATER = "saved_for_later", "Saved for later"
         APPROVED = "approved", "Approved"
         REJECTED = "rejected", "Rejected"
+        PUBLISHED = "published", "Published"
         DISCARDED = "discarded", "Discarded"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -79,8 +81,13 @@ class DraftResponse(models.Model):
         blank=True,
         help_text="Reviewer edit wins for copy/export; never auto-posted.",
     )
+    private_notes = models.TextField(
+        blank=True,
+        default="",
+        help_text="Operator-only notes; never sent to Reddit.",
+    )
     status = models.CharField(
-        max_length=16,
+        max_length=32,
         choices=Status.choices,
         default=Status.DRAFT,
         db_index=True,
@@ -95,6 +102,11 @@ class DraftResponse(models.Model):
     generated_at = models.DateTimeField(null=True, blank=True)
     approved_at = models.DateTimeField(null=True, blank=True)
     rejected_at = models.DateTimeField(null=True, blank=True)
+    published_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When the operator marked the reply as manually published.",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

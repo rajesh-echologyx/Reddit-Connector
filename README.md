@@ -15,8 +15,9 @@ This repository is a monorepo (`backend/` Django/DRF + `frontend/` Vite/React).
 |-------|--------|
 | 1 Foundation | Merged |
 | 2 Reddit integration | Merged |
-| 3 AI integration | This branch — profile, relevance, drafts, mock OpenAI |
-| 4+ Review polish / automation | Stubs only (approve ≠ publish) |
+| 3 AI integration | Merged |
+| 4 Review workflow | This branch — queue polish, audit log, copy/export (no auto-submit) |
+| 5+ Celery automation / analytics | Not started |
 
 ## Quick start (Docker)
 
@@ -134,24 +135,27 @@ Vite proxies `/api` to `http://localhost:8000`.
 make test
 ```
 
-## Phase 3 API
+## Review workflow (Phase 4)
+
+Hard invariant: **approve ≠ publish**. Default path is copy draft + open original Reddit post. Authenticated Reddit submit stays behind `REDDIT_SUBMIT_ENABLED=false` (default) and is not implemented even when the flag is on (returns 501).
 
 | Method | Path | Purpose |
 |--------|------|---------|
-| GET/PATCH | `/api/v1/profile/` | Expertise, tone, constraints, model overrides |
-| GET/POST | `/api/v1/writing-samples/` | List/create samples (max 5 active) |
-| PATCH/DELETE | `/api/v1/writing-samples/{id}/` | Update/delete |
-| GET | `/api/v1/posts/{id}/` | Detail + analysis + drafts |
-| POST | `/api/v1/posts/{id}/analyze/` | Enqueue relevance (`OPENAI_MODE`) |
-| POST | `/api/v1/posts/{id}/draft/` | Enqueue draft (requires relevant analysis) |
-| GET | `/api/v1/review/queue/` | Drafts in `draft`/`in_review` |
+| GET | `/api/v1/review/queue/?status=` | Filterable queue (`in_review,draft`, `saved_for_later`, …) |
+| GET | `/api/v1/review/{id}/` | Draft detail + post context |
 | POST | `/api/v1/review/{id}/edit/` | Save `body_edited` |
+| POST | `/api/v1/review/{id}/notes/` | Private operator notes |
 | POST | `/api/v1/review/{id}/approve/` | Local approve — **does not post** |
 | POST | `/api/v1/review/{id}/reject/` | Reject + notes |
+| POST | `/api/v1/review/{id}/save-for-later/` | Park draft outside active queue |
+| POST | `/api/v1/review/{id}/reopen/` | Return saved draft to queue |
+| POST | `/api/v1/review/{id}/mark-published/` | Record manual publish — **does not post** |
 | POST | `/api/v1/review/{id}/regenerate/` | New draft; old discarded |
 | GET | `/api/v1/review/{id}/export/` | Clipboard text + permalink |
+| POST | `/api/v1/review/{id}/submit/` | Blocked unless flag on; never auto |
+| GET | `/api/v1/review/{id}/actions/` | Append-only audit log |
 
-Phase 2 Reddit/monitors endpoints remain under `/api/v1/reddit/`, `/api/v1/monitors/`, `/api/v1/posts/`.
+Phase 3 profile/analysis and Phase 2 Reddit/monitors endpoints remain under `/api/v1/`.
 
 ## Layout
 
@@ -171,4 +175,4 @@ docker-compose.yml
 - Reddit tokens encrypted at rest with Fernet (`TOKEN_ENCRYPTION_KEY`).
 - OpenAI key is server-side only.
 - `REDDIT_MODE=fixture` is refused when `DJANGO_ENV=production`.
-- Approve ≠ publish. No Reddit comment write path.
+- Approve ≠ publish. `REDDIT_SUBMIT_ENABLED` defaults false; no auto-submit path.

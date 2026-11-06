@@ -44,8 +44,8 @@ export function DashboardPage() {
           Dashboard
         </h1>
         <p className="max-w-2xl text-black/70">
-          Welcome{user ? `, ${user.username}` : ""}. Phase 3 AI scoring and drafts
-          are available — fill your profile, analyze posts, review drafts.
+          Welcome{user ? `, ${user.username}` : ""}. Review drafts, copy replies,
+          and open the original Reddit post — never auto-submit.
         </p>
       </div>
 

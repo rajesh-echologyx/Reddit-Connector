@@ -209,6 +209,11 @@ OPENAI_RELEVANCE_MODEL = env("OPENAI_RELEVANCE_MODEL", "gpt-4o-mini") or "gpt-4o
 OPENAI_DRAFT_MODEL = env("OPENAI_DRAFT_MODEL", "gpt-4o-mini") or "gpt-4o-mini"
 MAX_ACTIVE_WRITING_SAMPLES = int(env("MAX_ACTIVE_WRITING_SAMPLES", "5") or "5")
 
+# Phase 4+: authenticated Reddit comment submit. Default OFF.
+# Even when true, submit is never automatic — only an explicit human API call.
+# Phase 4 still returns 501 when the flag is on (copy/export is the publish path).
+REDDIT_SUBMIT_ENABLED = env_bool("REDDIT_SUBMIT_ENABLED", False)
+
 # Hard invariant: fixture mode must never run in production.
 if DJANGO_ENV == "production" and REDDIT_MODE == "fixture":
     raise ImproperlyConfigured(

@@ -145,6 +145,7 @@ export type DraftResponse = {
   analysis: string | null;
   body: string;
   body_edited: string | null;
+  private_notes: string;
   effective_body: string;
   status: string;
   tone: string;
@@ -156,13 +157,28 @@ export type DraftResponse = {
   generated_at: string | null;
   approved_at: string | null;
   rejected_at: string | null;
+  published_at: string | null;
   created_at: string;
   updated_at: string;
   never_auto_publish: boolean;
+  reddit_submit_enabled?: boolean;
   post_title?: string;
   post_subreddit?: string;
+  post_author?: string;
+  post_selftext?: string;
+  post_score?: number;
   relevance_score?: number | null;
   permalink?: string;
+  reddit_url?: string;
+};
+
+export type ReviewActionResult = {
+  detail: string;
+  draft: DraftResponse;
+  never_auto_publish: boolean;
+  reddit_submit_enabled?: boolean;
+  task_id?: string;
+  result?: unknown;
 };
 
 export type RedditPost = {
@@ -293,33 +309,65 @@ export const profileApi = {
 
 export const reviewApi = {
   queue: (status = "in_review,draft") =>
-    api<{ count: number; results: DraftResponse[]; never_auto_publish: boolean }>(
-      `/review/queue/?status=${encodeURIComponent(status)}`,
-    ),
+    api<{
+      count: number;
+      results: DraftResponse[];
+      never_auto_publish: boolean;
+      reddit_submit_enabled?: boolean;
+    }>(`/review/queue/?status=${encodeURIComponent(status)}`),
+  detail: (id: string) =>
+    api<{
+      draft: DraftResponse;
+      never_auto_publish: boolean;
+      reddit_submit_enabled?: boolean;
+    }>(`/review/${id}/`),
   edit: (id: string, body_edited: string, notes = "") =>
     api<DraftResponse>(`/review/${id}/edit/`, {
       method: "POST",
       json: { body_edited, notes },
     }),
   approve: (id: string, notes = "") =>
-    api<{ detail: string; draft: DraftResponse; never_auto_publish: boolean }>(
-      `/review/${id}/approve/`,
-      { method: "POST", json: { notes } },
-    ),
+    api<ReviewActionResult>(`/review/${id}/approve/`, {
+      method: "POST",
+      json: { notes },
+    }),
   reject: (id: string, notes = "") =>
-    api<{ detail: string; draft: DraftResponse; never_auto_publish: boolean }>(
-      `/review/${id}/reject/`,
-      { method: "POST", json: { notes } },
-    ),
-  regenerate: (id: string) =>
-    api<{ detail: string; task_id: string; never_auto_publish: boolean }>(
-      `/review/${id}/regenerate/`,
-      { method: "POST", json: {} },
-    ),
+    api<ReviewActionResult>(`/review/${id}/reject/`, {
+      method: "POST",
+      json: { notes },
+    }),
+  saveForLater: (id: string, notes = "") =>
+    api<ReviewActionResult>(`/review/${id}/save-for-later/`, {
+      method: "POST",
+      json: { notes },
+    }),
+  reopen: (id: string, notes = "") =>
+    api<ReviewActionResult>(`/review/${id}/reopen/`, {
+      method: "POST",
+      json: { notes },
+    }),
+  markPublished: (id: string, notes = "") =>
+    api<ReviewActionResult>(`/review/${id}/mark-published/`, {
+      method: "POST",
+      json: { notes },
+    }),
+  notes: (id: string, private_notes: string) =>
+    api<ReviewActionResult>(`/review/${id}/notes/`, {
+      method: "POST",
+      json: { private_notes },
+    }),
+  regenerate: (id: string, notes = "") =>
+    api<ReviewActionResult>(`/review/${id}/regenerate/`, {
+      method: "POST",
+      json: { notes },
+    }),
   export: (id: string) =>
-    api<{ text: string; permalink: string; never_auto_publish: boolean }>(
-      `/review/${id}/export/`,
-    ),
+    api<{
+      text: string;
+      permalink: string;
+      never_auto_publish: boolean;
+      reddit_submit_enabled?: boolean;
+    }>(`/review/${id}/export/`),
 };
 
 export const monitorsApi = {

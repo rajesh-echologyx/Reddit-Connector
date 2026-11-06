@@ -1,5 +1,7 @@
+import { useQuery } from "@tanstack/react-query";
 import { NavLink, Outlet } from "react-router-dom";
 
+import { reviewApi } from "@/api/client";
 import { DevModeBanner } from "@/components/DevModeBanner";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,7 +9,7 @@ import { cn } from "@/lib/utils";
 
 const nav = [
   { to: "/", label: "Dashboard", end: true },
-  { to: "/review", label: "Review" },
+  { to: "/review", label: "Review", badgeKey: "review" as const },
   { to: "/posts", label: "Posts" },
   { to: "/monitors", label: "Monitors" },
   { to: "/profile", label: "Profile" },
@@ -17,6 +19,12 @@ const nav = [
 
 export function AppShell() {
   const { user, logout } = useAuth();
+  const dueReviews = useQuery({
+    queryKey: ["review-queue", "in_review,draft"],
+    queryFn: () => reviewApi.queue("in_review,draft"),
+    refetchInterval: 60_000,
+  });
+  const dueCount = dueReviews.data?.count ?? 0;
 
   return (
     <div className="min-h-screen">
@@ -57,6 +65,9 @@ export function AppShell() {
               }
             >
               {item.label}
+              {"badgeKey" in item && dueCount > 0 ? (
+                <span className="ml-1.5 text-xs opacity-80">{dueCount}</span>
+              ) : null}
             </NavLink>
           ))}
         </nav>
