@@ -10,6 +10,8 @@ DEBUG = False
 SECRET_KEY = "test-secret-key-not-for-production"
 ALLOW_BOOTSTRAP = True  # noqa: F811
 REDDIT_MODE = "fixture"  # noqa: F811
+OPENAI_MODE = "mock"  # noqa: F811
+OPENAI_API_KEY = ""  # noqa: F811
 # Stable Fernet key for deterministic encrypt/decrypt tests
 TOKEN_ENCRYPTION_KEY = Fernet.generate_key().decode()  # noqa: F811
 

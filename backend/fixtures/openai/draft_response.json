@@ -1,0 +1,11 @@
+{
+  "draft": "A few practical notes based on common patterns (not personal war stories):\n\n1. Prefer clear boundaries between discovery, scoring, and human review so nothing posts without an explicit approve step.\n2. Keep rate limits and retries visible in the worker so 429s do not stampede.\n3. For API design, return structured errors with a stable `code` field — it makes SPA handling much simpler.\n\nIf you share which part is failing (auth, polling, or drafts), happy to dig into that specifically.",
+  "tone": "helpful",
+  "claims_made": [
+    "Separating discovery, scoring, and human review avoids accidental publishes.",
+    "Structured API error codes simplify SPA handling."
+  ],
+  "needs_human_check": [
+    "Confirm none of the advice implies experience the operator does not have."
+  ]
+}

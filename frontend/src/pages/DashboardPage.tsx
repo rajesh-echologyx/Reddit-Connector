@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
-import { monitorsApi, opsApi, redditApi } from "@/api/client";
+import { monitorsApi, opsApi, redditApi, reviewApi } from "@/api/client";
 import { useAuth } from "@/hooks/useAuth";
 
 export function DashboardPage() {
@@ -23,6 +23,10 @@ export function DashboardPage() {
     queryKey: ["monitors"],
     queryFn: () => monitorsApi.list(),
   });
+  const review = useQuery({
+    queryKey: ["review-queue"],
+    queryFn: () => reviewApi.queue(),
+  });
 
   const connectionLabel =
     reddit.data?.reddit_username ||
@@ -40,12 +44,17 @@ export function DashboardPage() {
           Dashboard
         </h1>
         <p className="max-w-2xl text-black/70">
-          Welcome{user ? `, ${user.username}` : ""}. Phase 2 Reddit integration is
-          live — configure monitors, discover posts, connect OAuth when ready.
+          Welcome{user ? `, ${user.username}` : ""}. Phase 3 AI scoring and drafts
+          are available — fill your profile, analyze posts, review drafts.
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Stat
+          label="Due reviews"
+          value={String(review.data?.count ?? "…")}
+          hint={<Link to="/review">Open queue</Link>}
+        />
         <Stat
           label="Monitors"
           value={String(monitors.data?.count ?? "…")}
@@ -69,7 +78,8 @@ export function DashboardPage() {
 
       <p className="text-sm text-black/50">
         Hard invariant: never auto-publish Reddit comments
-        {health.data?.never_auto_publish ? " ✓" : ""}.
+        {health.data?.never_auto_publish ? " ✓" : ""}. OpenAI mode:{" "}
+        {health.data?.openai_mode ?? "…"}.
       </p>
     </section>
   );

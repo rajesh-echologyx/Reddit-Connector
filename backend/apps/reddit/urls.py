@@ -8,5 +8,5 @@ urlpatterns = [
     path("reddit/status/", views.reddit_status, name="reddit-status"),
     path("reddit/disconnect/", views.reddit_disconnect, name="reddit-disconnect"),
     path("posts/", views.RedditPostListView.as_view(), name="reddit-posts-list"),
-    path("posts/<uuid:pk>/", views.RedditPostDetailView.as_view(), name="reddit-posts-detail"),
+    # Detail + analyze/draft live in apps.analysis.urls (Phase 3).
 ]

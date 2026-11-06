@@ -7,12 +7,11 @@ import { DashboardPage } from "@/pages/DashboardPage";
 import { LoginPage } from "@/pages/LoginPage";
 import { MonitorsPage } from "@/pages/MonitorsPage";
 import { PostsPage } from "@/pages/PostsPage";
-import {
-  AnalyticsPage,
-  ProfilePage,
-  ReviewPage,
-} from "@/pages/Placeholders";
+import { AnalyticsPage } from "@/pages/Placeholders";
+import { ProfilePage } from "@/pages/ProfilePage";
+import { ReviewPage } from "@/pages/ReviewPage";
 import { SettingsPage } from "@/pages/SettingsPage";
+
 import type { ReactNode } from "react";
 
 const queryClient = new QueryClient();

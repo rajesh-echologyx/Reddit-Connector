@@ -1,0 +1,11 @@
+{
+  "relevance_score": 85,
+  "is_relevant": true,
+  "reasons": [
+    "Post topic overlaps with the operator's stated expertise.",
+    "A technical reply could add concrete value."
+  ],
+  "matched_expertise": ["python", "django"],
+  "risk_flags": [],
+  "summary": "Technical post that aligns with the operator's backend expertise."
+}

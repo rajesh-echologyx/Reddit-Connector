@@ -203,9 +203,20 @@ REDDIT_USER_AGENT = env(
     "web:raddit-connector:v0.1.0 (by /u/YOUR_USER)",
 )
 OPENAI_API_KEY = env("OPENAI_API_KEY", "")
+# mock = fixture/deterministic responses (default local/CI). live = OpenAI API.
+OPENAI_MODE = (env("OPENAI_MODE", "mock") or "mock").lower()
+OPENAI_RELEVANCE_MODEL = env("OPENAI_RELEVANCE_MODEL", "gpt-4o-mini") or "gpt-4o-mini"
+OPENAI_DRAFT_MODEL = env("OPENAI_DRAFT_MODEL", "gpt-4o-mini") or "gpt-4o-mini"
+MAX_ACTIVE_WRITING_SAMPLES = int(env("MAX_ACTIVE_WRITING_SAMPLES", "5") or "5")
 
 # Hard invariant: fixture mode must never run in production.
 if DJANGO_ENV == "production" and REDDIT_MODE == "fixture":
     raise ImproperlyConfigured(
         "REDDIT_MODE=fixture is refused when DJANGO_ENV=production."
+    )
+
+# Live OpenAI without a key is a configuration error (mock mode is fine without a key).
+if OPENAI_MODE == "live" and not OPENAI_API_KEY and DJANGO_ENV == "production":
+    raise ImproperlyConfigured(
+        "OPENAI_MODE=live requires OPENAI_API_KEY when DJANGO_ENV=production."
     )
