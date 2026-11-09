@@ -16,9 +16,6 @@ if _env in {"test", "ci"}:
 elif _env in {"docker", "compose"}:
     from .docker import *  # noqa: F401,F403
 elif _env in {"production", "prod"}:
-    # Production reuses docker settings with DEBUG off (already default).
-    from .docker import *  # noqa: F401,F403
-
-    DEBUG = False  # noqa: F811
+    from .production import *  # noqa: F401,F403
 else:
     from .local import *  # noqa: F401,F403

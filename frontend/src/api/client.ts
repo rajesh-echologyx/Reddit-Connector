@@ -471,3 +471,51 @@ export const tasksApi = {
   get: (id: string) => api<TaskRun>(`/tasks/${id}/`),
   automationStatus: () => api<AutomationStatus>("/automation/status/"),
 };
+
+export type AnalyticsTotals = {
+  posts_discovered: number;
+  relevant_count: number;
+  drafts_generated: number;
+  approved: number;
+  rejected: number;
+};
+
+export type AnalyticsDay = AnalyticsTotals & { date: string };
+
+export type AnalyticsSummary = {
+  range_days: number;
+  start_date: string;
+  end_date: string;
+  totals: AnalyticsTotals;
+  days_recorded: number;
+  series: AnalyticsDay[];
+  never_auto_publish: boolean;
+};
+
+export type FunnelStage = {
+  key: string;
+  label: string;
+  count: number;
+};
+
+export type AnalyticsFunnel = {
+  range_days: number;
+  start_date: string;
+  end_date: string;
+  stages: FunnelStage[];
+  conversion: {
+    discovered_to_relevant: number | null;
+    relevant_to_drafted: number | null;
+    drafted_to_approved: number | null;
+    discovered_to_approved: number | null;
+  };
+  rejected: number;
+  never_auto_publish: boolean;
+};
+
+export const analyticsApi = {
+  summary: (range: 7 | 30 = 7) =>
+    api<AnalyticsSummary>(`/analytics/summary/?range=${range}`),
+  funnel: (range: 7 | 30 = 7) =>
+    api<AnalyticsFunnel>(`/analytics/funnel/?range=${range}`),
+};

@@ -15,6 +15,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
+# Ship wait-for-db inside the image so prod compose need not bind-mount ./scripts.
+RUN mkdir -p /scripts && cp /app/wait-for-db.sh /scripts/wait-for-db.sh && chmod +x /scripts/wait-for-db.sh
 
 EXPOSE 8000
 
